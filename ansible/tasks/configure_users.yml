@@ -1,0 +1,30 @@
+- name: Add users to server
+  ansible.builtin.user:
+    name: "{{ item }}"
+    create_home: yes
+    groups: wheel
+    append: yes
+  loop:
+    - eclauson
+    - sswanson
+    - fenix
+    - jkhal
+  become: yes
+
+- name: Add ssh keys for each user
+  ansible.posix.authorized_key:
+    user: "{{ item.name }}"
+    key: "{{ item.key }}"
+    state: present
+  loop:
+    - name: eclauson
+      key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCxmIATcBYhEhaQ/KXJXCG2uJBMoNqHfAIHGPzYHTYrIRbpXaD6Tlg7F7R3DJUPDZnlQ3kdgPFWGpFz8evnHp0xAa7/2tslJ0S6rnCiAsVchGCpD8jLz+lVihI2FLobGnz+6NEED2VGdSO6FSSKvk9GRMXwFSTDh/CuAnnVNC5Tmkeu/epUMqDm5LbLpWTlzDnu2w9CmrPOJJ2JMpxY2jrSQzAFu+rzrE9imOU/l3DTM0Mm23FLmDiYU7w9JiDmXSYa3BEUrQHgGn6Uk+y9Mu2u2JsgUPrg4452CKxyZRnIbHSOnC8kMsg8GLbXNPvsSGrU1R5hSXkge3XAnfKca6ka4EjYz+AxrtOLo03pKfv1H+jgyoOaem5iOCsYLVz9nCwOCSJhGx6BBoy8EcoVoKkLlCGblYLUJAZF4ViwS39yxbctUgsY/FYacfWuJp5Jcg2qA8Y7f14gaq+xbwLnpUTsl7ze4+xqYmw98ZVYBqAdmWrOWyf2lLmvJbNsKMnWfm4r+hluzuDcWT5TRmEV5bHbvBBDJNAyvewFhm7L2F/vJduhBJumnLKPAdDN+/PXAZz7kyjsgagpdlugszImglbMONVNTbXMd6e8JQlXZLI+gtKXd2hw1DGzlkY5ysRtS5OrU/efh8JvNJVLZdMWz61zScUOkV6rLSPxt2g8JGM5LQ== eclauson@uoregon.edu"
+    - name: sswanson
+      key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDIy21E8YnIkQd80fBzuZZL2eJLz8o/w5akgofVyg+XI2RQjuzbc2hSi0FEH4F7Ea2YfnQBKfvusJhTJO62tYOxrQYT8CaBcwCDS1b2C/mOO2W9Ca69V9k4L+MoDltq+a+tfGfY1gcXNmZ4dZ+/dWK7Oqz4s3HJuMhABx8tRtroJnvjGgJWpX9zHr7XG6K3DwzGtFJMs/3WKV4a1B6M/Xych6UlpSKEtBoGfC1BewLlRbwuhbXy0yI5hvxruwq2efrNV4YhiPU/981aQ+6Zre+owerBlARQO1lS0PFh7hQG3lImu+JfqihCHz7grHLBcNpnRsdY+pkOBNqdwLCcjYdQzxHqtSuY6ll9DpQDSb/NwPFjKLUy5MnpbHJzfJfr4fmjDay7e1MvE1CSs2mb4d5iuxeAFCYOMqroZ51G9C+GfKuLqTwh2MogCmcdMwM2gS1mfsEtLNQ7ls2dPbTqRq6yOIlu+8EJz2tELXllE4YDvTPrSV1vy59BHcyfzRW0bjU= stephen@s7471c"
+    - name: fenix
+      key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCemZoCmSM+LWI/4qOwS/cRP4YTXPFgTPcv6bvf309iS0eJCzhD9dO1h0I2oSa6l09y3OhRlsdnhi9wUg/FAk1xRHUtP5GSvlryBujVE5dYQtAF/uETpexCB16czyhzdaZJoQ9GTSluzQ03i1HwG0o3pcZEszZUPC0vTRBm1vYnzPLF87gWNRB4l9l9bnNOh6wm3ULrqsiMihyVX0dHPEhFpRWHc+/X93KvaoCkbWcnnI3//sZ8j7BK8duBq2SdyCzqI/D0bUO2VIZC1TLTrW+97LubdOlJPmwnCfSc8sleDkI6h2FJpiyXhajqg1rQzIozPt5CvQGJZE0ds/4oNO5dmn2har8ycRI47aMqCBBZ/3fBoHo42SfnvmWE+vmV8fiZwX0xdrD6uvgnrzwA+71X+F4iX9EoneosvBpvHr7ZHMN6x749ehjBhUENBoOaCzwZSc/fX7+u3XQ3pwEZUBXW6t+8qVF9fJhZRp/+ner+FFlvsbhGa9j2uZEsf1EjWNs= aiapara@pop-os"
+    - name: jkhal
+      key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPm2Ypvgm5nFgEsLlMSpITQnEsBBMtWtnQmfr4wvGzoe jkhal@dyn-10-108-27-122.wless.uoregon.edu"
+  become: yes
+
+      

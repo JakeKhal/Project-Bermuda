@@ -1,0 +1,5 @@
+- hosts: localhost
+  tasks:
+    - name: Configure Users
+      ansible.builtin.include_tasks:
+        file: tasks/configure_users.yml
