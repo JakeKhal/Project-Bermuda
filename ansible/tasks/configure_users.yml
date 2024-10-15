@@ -13,7 +13,7 @@
 
 - name: Add ssh keys for each user
   ansible.posix.authorized_key:
-    user: "{{ item.user }}"
+    user: "{{ item.name }}"
     key: "{{ item.key }}"
     state: present
   loop:
