@@ -1,6 +1,6 @@
 - name: Add users to server
   ansible.builtin.user:
-    name: "{{ item }}""
+    name: "{{ item }}"
     create_home: yes
     groups: wheel
     append: yes
