@@ -17,8 +17,8 @@
     key: "{{ item.key }}"
     state: present
   loop:
-    # - name: eclauson
-    #   key: ""
+    - name: eclauson
+      key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCxmIATcBYhEhaQ/KXJXCG2uJBMoNqHfAIHGPzYHTYrIRbpXaD6Tlg7F7R3DJUPDZnlQ3kdgPFWGpFz8evnHp0xAa7/2tslJ0S6rnCiAsVchGCpD8jLz+lVihI2FLobGnz+6NEED2VGdSO6FSSKvk9GRMXwFSTDh/CuAnnVNC5Tmkeu/epUMqDm5LbLpWTlzDnu2w9CmrPOJJ2JMpxY2jrSQzAFu+rzrE9imOU/l3DTM0Mm23FLmDiYU7w9JiDmXSYa3BEUrQHgGn6Uk+y9Mu2u2JsgUPrg4452CKxyZRnIbHSOnC8kMsg8GLbXNPvsSGrU1R5hSXkge3XAnfKca6ka4EjYz+AxrtOLo03pKfv1H+jgyoOaem5iOCsYLVz9nCwOCSJhGx6BBoy8EcoVoKkLlCGblYLUJAZF4ViwS39yxbctUgsY/FYacfWuJp5Jcg2qA8Y7f14gaq+xbwLnpUTsl7ze4+xqYmw98ZVYBqAdmWrOWyf2lLmvJbNsKMnWfm4r+hluzuDcWT5TRmEV5bHbvBBDJNAyvewFhm7L2F/vJduhBJumnLKPAdDN+/PXAZz7kyjsgagpdlugszImglbMONVNTbXMd6e8JQlXZLI+gtKXd2hw1DGzlkY5ysRtS5OrU/efh8JvNJVLZdMWz61zScUOkV6rLSPxt2g8JGM5LQ== eclauson@uoregon.edu"
     - name: sswanson
       key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDIy21E8YnIkQd80fBzuZZL2eJLz8o/w5akgofVyg+XI2RQjuzbc2hSi0FEH4F7Ea2YfnQBKfvusJhTJO62tYOxrQYT8CaBcwCDS1b2C/mOO2W9Ca69V9k4L+MoDltq+a+tfGfY1gcXNmZ4dZ+/dWK7Oqz4s3HJuMhABx8tRtroJnvjGgJWpX9zHr7XG6K3DwzGtFJMs/3WKV4a1B6M/Xych6UlpSKEtBoGfC1BewLlRbwuhbXy0yI5hvxruwq2efrNV4YhiPU/981aQ+6Zre+owerBlARQO1lS0PFh7hQG3lImu+JfqihCHz7grHLBcNpnRsdY+pkOBNqdwLCcjYdQzxHqtSuY6ll9DpQDSb/NwPFjKLUy5MnpbHJzfJfr4fmjDay7e1MvE1CSs2mb4d5iuxeAFCYOMqroZ51G9C+GfKuLqTwh2MogCmcdMwM2gS1mfsEtLNQ7ls2dPbTqRq6yOIlu+8EJz2tELXllE4YDvTPrSV1vy59BHcyfzRW0bjU= stephen@s7471c"
     - name: fenix
