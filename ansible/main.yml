@@ -3,3 +3,10 @@
     - name: Configure Users
       ansible.builtin.include_tasks:
         file: tasks/configure_users.yml
+
+    - name: Install the latest version of MariaDB
+      ansible.builtin.package:
+        name:
+          - libmariadb-dev
+          - mariadb-server
+        state: latest
