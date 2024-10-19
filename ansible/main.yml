@@ -1,13 +1,13 @@
 - hosts: localhost
   tasks:
-    - name: Configure Users
-      ansible.builtin.include_tasks:
-        file: tasks/configure_users.yml
+    #- name: Configure Users
+    #  ansible.builtin.include_tasks:
+    #    file: tasks/configure_users.yml
 
     - name: Configure MariaDB
       ansible.builtin.include_tasks:
         file: tasks/configure_mariadb.yml
 
-    - name: Configure Flask
-      ansible.builtin.include_tasks:
-        file: tasks/configure_flask.yml
+    #- name: Configure Flask
+    #  ansible.builtin.include_tasks:
+    #    file: tasks/configure_flask.yml
