@@ -1,12 +1,13 @@
 - hosts: localhost
   tasks:
-    - name: Configure Users
-      ansible.builtin.include_tasks:
-        file: tasks/configure_users.yml
+    #- name: Configure Users
+    #  ansible.builtin.include_tasks:
+    #    file: tasks/configure_users.yml
 
-    - name: Install the latest version of MariaDB
-      ansible.builtin.package:
-        name:
-          - libmariadb-dev
-          - mariadb-server
-        state: latest
+    - name: Configure MariaDB
+      ansible.builtin.include_tasks:
+        file: tasks/configure_mariadb.yml
+
+    - name: Configure Flask
+      ansible.builtin.include_tasks:
+        file: tasks/configure_flask.yml
