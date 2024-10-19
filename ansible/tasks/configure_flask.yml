@@ -1,0 +1,5 @@
+- name: Install Flask
+  ansible.builtin.pip:
+    name: Flask
+    state: present
+  become: yes
