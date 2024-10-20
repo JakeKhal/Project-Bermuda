@@ -1,5 +1,6 @@
 - hosts: localhost
   tasks:
+    #Comment in this block for localhost testing
     - name: Configure Users
       ansible.builtin.include_tasks:
         file: tasks/configure_users.yml
@@ -8,6 +9,6 @@
       ansible.builtin.include_tasks:
         file: tasks/configure_mariadb.yml
 
-    #- name: Configure Flask
-    #  ansible.builtin.include_tasks:
-    #    file: tasks/configure_flask.yml
+    - name: Configure Flask
+      ansible.builtin.include_tasks:
+        file: tasks/configure_flask.yml
