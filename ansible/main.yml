@@ -12,3 +12,7 @@
     - name: Configure Flask
       ansible.builtin.include_tasks:
         file: tasks/configure_flask.yml
+
+    - name: Configure Caddy
+      ansible.builtin.include_tasks:
+        file: tasks/configure_caddy.yml
