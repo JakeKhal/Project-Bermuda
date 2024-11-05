@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enter SSH Key</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="laser-background">
+        <div class="ssh-fullscreen">
+            <h1 class="title">UO Cybersecurity Club</h1>
+            <textarea id="ssh-key" placeholder="Paste your SSH key here..."></textarea>
+            <button id="submit-btn" onclick="submitKey()">Submit SSH Key</button>
+        </div>
+    </div>
+
+    <script>
+        function submitKey() {
+            const sshKey = document.getElementById('ssh-key').value;
+            if (sshKey) {
+                document.getElementById('ssh-key').classList.add('glow');
+                const button = document.getElementById('submit-btn');
+                button.textContent = "Submitted";
+                button.disabled = true;
+            }
+        }
+    </script>
+</body>
+</html>
