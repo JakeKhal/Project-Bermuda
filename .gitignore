@@ -1,3 +1,4 @@
 flask/log_file.log
 .venv/
 __pycache__/
+venv

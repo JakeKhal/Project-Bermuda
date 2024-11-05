@@ -2,6 +2,7 @@
 import argparse
 from flask import Flask, render_template
 from flask_socketio import SocketIO
+import flask
 import pty
 import os
 import subprocess
@@ -13,6 +14,8 @@ import shlex
 import logging
 import sys
 import socket
+import flask_login
+
 
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
@@ -20,10 +23,54 @@ __version__ = "0.5.0.2"
 
 app = Flask(__name__, template_folder="./templates", static_folder="./static", static_url_path="")
 app.config["SECRET_KEY"] = "secret!"
-app.config["fd"] = None
-app.config["child_pid"] = None
+app.config["cmd"] = "cat /etc/os-release"
+app.config["podman_uri"] = "unix:///run/user/1000/podman/podman.sock"
+app.config["active_sessions"] = {}
 socketio = SocketIO(app)
+login_manager = flask_login.LoginManager()
+login_manager.init_app(app)
 
+class User(flask_login.UserMixin):
+    pass
+
+@login_manager.user_loader
+def user_loader(email):
+    user = User()
+    user.id = email
+    return user
+
+
+@app.route("/authenticate", methods=['GET', 'POST'])
+def authenticate():
+    if flask.request.method == 'GET':
+        return '''
+               <form action='authenticate' method='POST'>
+                <input type='text' name='email' id='email' placeholder='email'/>
+                <input type='submit' name='submit'/>
+               </form>
+               '''
+
+    email = flask.request.form['email']
+    user = User()
+    user.id = email
+    flask_login.login_user(user)
+    return flask.redirect(flask.url_for('terminal'))
+
+    return 'Bad login'
+
+@app.route("/")
+@flask_login.login_required
+def index():
+    return render_template("ssh_entry.html")
+
+@app.route("/landing")
+def landing():
+    return render_template("landing.html")
+
+@app.route("/terminal")
+@flask_login.login_required
+def terminal():
+    return render_template("terminal.html")
 
 def set_winsize(fd, row, col, xpix=0, ypix=0):
     logging.debug("setting window size with termios")
@@ -43,11 +90,6 @@ def read_and_forward_pty_output():
                     errors="ignore"
                 )
                 socketio.emit("pty-output", {"output": output}, namespace="/pty")
-
-
-@app.route("/")
-def index():
-    return render_template("index.html")
 
 @socketio.on("pty-input", namespace="/pty")
 def pty_input(data):
@@ -69,8 +111,12 @@ def resize(data):
 @socketio.on("connect", namespace="/pty")
 def connect():
     """new client connected"""
+
+    if not current_user.is_authenticated:
+       return; 
+    
     logging.info("new client connected")
-    if app.config["child_pid"]:
+    if app.config["active_sessions"][current_user.name]:
         # already started child process, don't start another
         return
 
@@ -85,7 +131,7 @@ def connect():
         # this is the parent process fork.
         # store child fd and pid
         app.config["fd"] = fd
-        app.config["child_pid"] = child_pid
+        app.config["active_sessions"] = child_pid
         set_winsize(fd, 50, 50)
         cmd = " ".join(shlex.quote(c) for c in app.config["cmd"])
         # logging/print statements must go after this because... I have no idea why
@@ -101,51 +147,7 @@ def connect():
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description=(
-            "A fully functional terminal in your browser. "
-            "https://github.com/cs01/pyxterm.js"
-        ),
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
-    parser.add_argument(
-        "-p", "--port", default=5000, help="port to run server on", type=int
-    )
-    parser.add_argument(
-        "--host",
-        default="127.0.0.1",
-        help="host to run server on (use 0.0.0.0 to allow access from other hosts)",
-    )
-    parser.add_argument("--debug", action="store_true", help="debug the server")
-    parser.add_argument("--version", action="store_true", help="print version and exit")
-    parser.add_argument(
-        "--command", default="bash", help="Command to run in the terminal"
-    )
-    parser.add_argument(
-        "--cmd-args",
-        default="",
-        help="arguments to pass to command (i.e. --cmd-args='arg1 arg2 --flag')",
-    )
-    args = parser.parse_args()
-    if args.version:
-        print(__version__)
-        exit(0)
-    app.config["cmd"] = [args.command] + shlex.split(args.cmd_args)
-    green = "\033[92m"
-    end = "\033[0m"
-    log_format = (
-        green
-        + "pyxtermjs > "
-        + end
-        + "%(levelname)s (%(funcName)s:%(lineno)s) %(message)s"
-    )
-    logging.basicConfig(
-        format=log_format,
-        stream=sys.stdout,
-        level=logging.DEBUG if args.debug else logging.INFO,
-    )
-    logging.info(f"serving on http://{args.host}:{args.port}")
-    socketio.run(app, debug=True, port=args.port, host=args.host)
+    socketio.run(app, debug=True, port=8080, host="0.0.0.0")
 
 if __name__ == '__main__':
     main()
