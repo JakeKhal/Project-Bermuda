@@ -15,7 +15,13 @@ import logging
 import sys
 import socket
 import flask_login
+from flask_login import current_user
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import DeclarativeBase
+from db import *
 
+db = SQLAlchemy(model_class=Base)
 
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
@@ -25,10 +31,14 @@ app = Flask(__name__, template_folder="./templates", static_folder="./static", s
 app.config["SECRET_KEY"] = "secret!"
 app.config["cmd"] = "cat /etc/os-release"
 app.config["podman_uri"] = "unix:///run/user/1000/podman/podman.sock"
-app.config["active_sessions"] = {}
 socketio = SocketIO(app)
 login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
+db.init_app(app)
+
+with app.app_context():
+    db.create_all()
 
 class User(flask_login.UserMixin):
     pass
@@ -63,12 +73,17 @@ def authenticate():
 def index():
     return render_template("ssh_entry.html")
 
+@flask_login.login_required
+@app.route("/whoami")
+def whoami():
+    return current_user.id
+
 @app.route("/landing")
 def landing():
     return render_template("landing.html")
 
 @app.route("/terminal")
-@flask_login.login_required
+#@flask_login.login_required
 def terminal():
     return render_template("terminal.html")
 
@@ -93,6 +108,7 @@ def read_and_forward_pty_output():
 
 @socketio.on("pty-input", namespace="/pty")
 def pty_input(data):
+    print(current_user.id)
     """write to the child pty. The pty sees this as if you are typing in a real
     terminal.
     """
@@ -103,6 +119,7 @@ def pty_input(data):
 
 @socketio.on("resize", namespace="/pty")
 def resize(data):
+    print(current_user.id)
     if app.config["fd"]:
         logging.debug(f"Resizing window to {data['rows']}x{data['cols']}")
         set_winsize(app.config["fd"], data["rows"], data["cols"])
@@ -112,13 +129,14 @@ def resize(data):
 def connect():
     """new client connected"""
 
+    print(current_user.id)
     if not current_user.is_authenticated:
        return; 
     
     logging.info("new client connected")
-    if app.config["active_sessions"][current_user.name]:
-        # already started child process, don't start another
-        return
+    # if current_user.id in app.config["active_sessions"].keys():
+    #     # already started child process, don't start another
+    #     return
 
     # create child process attached to a pty we can read from and write to
     (child_pid, fd) = pty.fork()
