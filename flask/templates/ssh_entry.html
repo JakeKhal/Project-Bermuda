@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings and Access</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="matrix-background">
+
+    <!-- Matrix Canvas for Animated Background -->
+    <canvas class="matrix-canvas" id="q"></canvas>
+
+    <!-- Matrix Content Overlay -->
+    <div class="matrix-content">
+        <div class="ssh-container">
+            <!-- Centered Title -->
+            <h1 class="title">UO Cybersecurity Club</h1>
+            
+            <!-- Instructions Box -->
+            <div class="instructions-box">
+                <h2>Instructions for CTF Access</h2>
+                <p>Submit your SSH key and password here to gain terminal access. Use these credentials to explore the CTF challenges available for practice.</p>
+            </div>
+
+            <!-- SSH Key Input Group -->
+            <div class="section-box">
+                <div class="input-group">
+                    <textarea id="ssh-key" placeholder="SSH Key"></textarea>
+                </div>
+                <button class="submit-ssh-btn" onclick="submitKey()">Submit SSH Key</button>
+            </div>
+
+            <!-- Password Input Group with Enter Button -->
+            <div class="section-box">
+                <div class="input-group">
+                    <input type="password" id="ssh-password" placeholder="Password">
+                </div>
+                <div class="input-group">
+                    <input type="password" id="confirm-password" placeholder="Confirm Password">
+                </div>
+                <button class="enter-btn" onclick="checkPasswords()">Enter</button>
+            </div>
+
+            <!-- Web Terminal Access Button -->
+            <button class="terminal-btn" onclick="accessTerminal()">Access Web Terminal</button>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <img src="python-pirate.png" alt="Python Pirates Icon" class="footer-icon">
+    </footer>
+
+    <!-- Matrix Background Overlay -->
+    <div class="matrix-background-mask">
+        <div class="matrix-background-image"></div>
+    </div>
+
+    <!-- Matrix Animation Script -->
+    <script>
+        var s = window.screen;
+        var width = q.width = s.width;
+        var height = q.height = s.height;
+        var letters = [];
+
+        for (var i = 0; i < width / 10; i++) {
+            letters[i] = 0;
+        }
+
+        var draw = function () {
+            q.getContext('2d').fillStyle = 'rgba(0,0,0,.05)';
+            q.getContext('2d').fillRect(0, 0, width, height);
+            q.getContext('2d').fillStyle = '#0F0';
+            letters.map(function (y_pos, index) {
+                text = Math.round(Math.random());
+                x_pos = index * 20;
+                q.getContext('2d').font = "16px monospace";
+                q.getContext('2d').fillText(text, x_pos, y_pos);
+                letters[index] = (y_pos > 758 + Math.random() * 1e4) ? 0 : y_pos + 20;
+            });
+        };
+        setInterval(draw, 60);
+    </script>
+
+    <!-- Functionality Script -->
+    <script>
+        function submitKey() {
+            const sshKey = document.getElementById('ssh-key').value;
+            if (sshKey) {
+                document.getElementById('ssh-key').classList.add('glow');
+                const button = document.querySelector('.submit-ssh-btn');
+                button.textContent = "✓ SSH Key Submitted";
+                button.disabled = true;
+            }
+        }
+
+        function checkPasswords() {
+            if (document.getElementById('ssh-password').value === "" || document.getElementById('confirm-password').value === "") {
+                alert("Password fields cannot be empty. Please fill in both fields.");
+            } else if (document.getElementById('ssh-password').value !== document.getElementById('confirm-password').value) {
+                alert("Passwords do not match. Please try again.");
+                document.getElementById('ssh-password').value = "";
+                document.getElementById('confirm-password').value = "";
+            } else {
+                alert("Passwords match. Proceeding with login.");
+            }
+        }
+
+        function accessTerminal() {
+            alert("Web Terminal Access");
+        }
+    </script>
+
+</body>
+</html>

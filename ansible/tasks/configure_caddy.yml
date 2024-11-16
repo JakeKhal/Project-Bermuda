@@ -1,0 +1,24 @@
+- name: Install Caddy via Homebrew (for macOS)
+  command: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  when: ansible_os_family == "Darwin"
+
+- name: Install Caddy via apt (for Linux)
+  apt:
+    name: caddy
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Copy Caddyfile
+  copy:
+    src: /path/to/local/Caddyfile
+    dest: /etc/caddy/Caddyfile
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Restart Caddy
+  systemd:
+    name: caddy
+    state: restarted
+    enabled: yes
+  when: ansible_os_family != "Darwin"  # On macOS, you may handle this differently

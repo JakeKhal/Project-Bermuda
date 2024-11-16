@@ -1,0 +1,62 @@
+[
+    {
+        "title": "Challenge 1: Decode the Cipher",
+        "summary": "Decrypt a hidden message using basic cryptographic techniques.",
+        "completed": false,
+        "flag": "1"
+    },
+    {
+        "title": "Challenge 2: Break the Hash",
+        "summary": "Crack the hashed password to gain access to the system.",
+        "completed": false,
+        "flag": "2"
+    },
+    {
+        "title": "Challenge 3: Web Exploitation",
+        "summary": "Find vulnerabilities in the web application to retrieve hidden data.",
+        "completed": false,
+        "flag": "3"
+    },
+    {
+        "title": "Challenge 4: Reverse Engineering",
+        "summary": "Analyze the executable to reveal the hidden information.",
+        "completed": false,
+        "flag": "4"
+    },
+    {
+        "title": "Challenge 5: Digital Forensics",
+        "summary": "Examine data and uncover clues in this forensic challenge.",
+        "completed": false,
+        "flag": "5"
+    },
+    {
+        "title": "Challenge 6:",
+        "summary": "Analyze the executable to reveal the hidden information.",
+        "completed": false,
+        "flag": "6"
+    },
+    {
+        "title": "Challenge 7:",
+        "summary": "Examine data and uncover clues in this forensic challenge.",
+        "completed": false,
+        "flag": "7"
+    },
+    {
+        "title": "Challenge 8",
+        "summary": "Examine data and uncover clues in this forensic challenge.",
+        "completed": false,
+        "flag": "8"
+    },
+    {
+        "title": "Challenge 9",
+        "summary": "Analyze the executable to reveal the hidden information.",
+        "completed": false,
+        "flag": "9"
+    },
+    {
+        "title": "Challenge 10",
+        "summary": "Examine data and uncover clues in this forensic challenge.",
+        "completed": false,
+        "flag": "10"
+    }
+]
