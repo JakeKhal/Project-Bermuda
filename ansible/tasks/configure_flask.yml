@@ -66,10 +66,10 @@
   when: flask_proxy_enabled != true  # Skip this if Caddy is acting as a reverse proxy
 
 
+
 #- name: Run Flask app
 #  command: python3 ../flask/bermuda.py
 #  environment:
 #    FLASK_ENV: development
   #async: 3600
   #poll: 0
-  
