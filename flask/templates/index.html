@@ -3,27 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UO Cybersecurity Club Authentication</title>
+    <title>UO Cybersecurity Club CTF Authenticate</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <div class="auth-background">
-        <div class="auth-box">
-            <h1>Welcome to UO Cybersecurity Club</h1>
-            <button onclick="signIn()">Click here to sign in (use UOregon email)</button>
-            <img src="m365logo.png" alt="Microsoft 365 Logo" class="logo">
-        </div>
-        <footer>
-            <p>Made by members of Project Bermuda</p>
-            <img src="python-pirate.png" alt="Project Bermuda Logo" class="footer-logo">
-        </footer>
+<body class="matrix-background">
+
+    <!-- Matrix Canvas for Animated Background -->
+    <canvas class="matrix-canvas" id="q"></canvas>
+
+    <!-- Matrix Content Overlay -->
+    <div class="matrix-content">
+        <div class="ssh-container">
+            <h1 class="title">Welcome to the University of Oregon Cybersecurity Club CTF</h1>
+            <p>Join us as you dive into exciting Capture The Flag (CTF) challenges that will enhance your cybersecurity skills.</p>
+            <p>To authenticate, please use your <strong>duckid@uoregon.edu</strong> email.</p>
+            <p>Here, you can add your SSH keys, create your account password, and access the web server terminal!</p>
+
+            <!-- Authentication Button -->
+            <button class="auth-btn" onclick="location.href='authentication.html'">Click Here to Authenticate</button>
+
+            <!-- Microsoft Logo -->
+            <img src="m365logo.png" alt="Microsoft Logo" class="logo">
+
+        </div>    
+    </div>
+
+    <!-- Footer Section -->
+    <footer class="footer">
+        <img src="python-pirate.png" alt="Python Pirates Icon" class="footer-icon">
+    </footer>
+    
+    <!-- Matrix Background Overlay -->
+    <div class="matrix-background-mask">
+        <div class="matrix-background-image"></div>
     </div>
 
     <script>
-        function signIn() {
-            // Redirect to Microsoft authentication page
-            window.location.href = "/authenticate"; 
+        var s = window.screen;
+        var width = q.width = s.width;
+        var height = q.height = s.height;
+        var letters = [];
+
+        for (var i = 0; i < width / 10; i++) {
+            letters[i] = 0;
         }
+
+        var draw = function () {
+            q.getContext('2d').fillStyle = 'rgba(0,0,0,.05)';
+            q.getContext('2d').fillRect(0, 0, width, height);
+            q.getContext('2d').fillStyle = '#0F0';
+            letters.map(function (y_pos, index) {
+                text = Math.round(Math.random());
+                x_pos = index * 20;
+                q.getContext('2d').font = "16px monospace";
+                q.getContext('2d').fillText(text, x_pos, y_pos);
+                letters[index] = (y_pos > 758 + Math.random() * 1e4) ? 0 : y_pos + 20;
+            });
+        };
+        setInterval(draw, 60);
     </script>
+    
 </body>
 </html>
