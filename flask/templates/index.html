@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UO Cybersecurity Club Authentication</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="auth-background">
+        <div class="auth-box">
+            <h1>Welcome to UO Cybersecurity Club</h1>
+            <button onclick="signIn()">Click here to sign in (use UOregon email)</button>
+            <img src="m365logo.png" alt="Microsoft 365 Logo" class="logo">
+        </div>
+        <footer>
+            <p>Made by members of Project Bermuda</p>
+            <img src="python-pirate.png" alt="Project Bermuda Logo" class="footer-logo">
+        </footer>
+    </div>
+
+    <script>
+        function signIn() {
+            // Redirect to Microsoft authentication page
+            window.location.href = "/authenticate"; 
+        }
+    </script>
+</body>
+</html>
