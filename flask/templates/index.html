@@ -4,21 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UO Cybersecurity Club Authentication</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../static/style.css">
 </head>
 <body>
     <div class="auth-background">
         <div class="auth-box">
             <h1>Welcome to UO Cybersecurity Club</h1>
-            <button onclick="signIn()">Click here to sign in (use UOregon email)</button>
-            <img src="assets/images/m365logo.png" alt="Microsoft 365 Logo" class="logo">
+            <button onclick="signIn()">Click here to sign in (use @uoregon.edu email)</button>
+            <img src="../static/assets/images/m365logo.png" alt="Microsoft 365 Logo" class="logo">
         </div>
-        <footer>
-            <p>Made by members of Project Bermuda</p>
-            <img src="assets/images/python-pirate.png" alt="Project Bermuda Logo" class="footer-logo">
-        </footer>
     </div>
-
+    <footer>
+        <p>Made by members of Project Bermuda</p>
+        <img src="../static/assets/images/python-pirate.png" alt="Project Bermuda Logo" class="footer-logo">
+    </footer>
     <script>
         function signIn() {
             // Redirect to Microsoft authentication page

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CTF Challenges</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../static/style.css">
     <style>
         body, html {
             height: 100%;
@@ -158,12 +158,12 @@
     </div>
 
     <footer class="footer">
-        <img src="assets/images/python-pirate.png" alt="Python Pirates Icon" class="footer-icon">
+        <img src="../static/assets/images/python-pirate.png" alt="Python Pirates Icon" class="footer-icon">
     </footer>
 
     <script>
         // Fetch and display challenges from JSON
-        fetch('ctfs.json')
+        fetch('../static/ctfs.json')
             .then(response => response.json())
             .then(challenges => {
                 const challengeGrid = document.getElementById('challengeGrid');
@@ -240,7 +240,7 @@
         // Function to create Thanos rain effect
         function triggerThanosRain() {
             const thanosRainDuration = 30000; // 30 seconds
-            const thanosImage = 'assets/images/thanos.png';
+            const thanosImage = '../static/assets/images/thanos.png';
 
             function createThanosElement() {
                 const thanos = document.createElement('img');
