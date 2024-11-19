@@ -1,24 +1,20 @@
-- name: Install Caddy via Homebrew (for macOS)
-  command: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  when: ansible_os_family == "Darwin"
-
-- name: Install Caddy via apt (for Linux)
-  apt:
-    name: caddy
+- name: Install packages
+  ansible.builtin.package:
+    name: "caddy"
     state: present
-  when: ansible_os_family == "Debian"
 
-- name: Copy Caddyfile
-  copy:
-    src: /path/to/local/Caddyfile
+- name: Ensure /etc/caddy directory exists
+  ansible.builtin.file:
+    path: /etc/caddy
+    state: directory
+    owner: caddy
+    group: caddy
+    mode: '0755'
+
+- name: Copy Caddyfile to /etc/caddy/
+  ansible.builtin.copy:
+    src: files/Caddyfile
     dest: /etc/caddy/Caddyfile
-    owner: root
-    group: root
+    owner: caddy
+    group: caddy
     mode: '0644'
-
-- name: Restart Caddy
-  systemd:
-    name: caddy
-    state: restarted
-    enabled: yes
-  when: ansible_os_family != "Darwin"  # On macOS, you may handle this differently
