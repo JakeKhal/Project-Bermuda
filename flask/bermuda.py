@@ -49,6 +49,18 @@ def read_and_forward_pty_output():
 def index():
     return render_template("index.html")
 
+@app.route("/terminal")
+def terminal():
+    return render_template("terminal.html")
+
+@app.route("/home")
+def home():
+    return render_template("home.html")
+
+@app.route("/ssh")
+def ssh():
+    return render_template("ssh_entry.html")
+
 @socketio.on("pty-input", namespace="/pty")
 def pty_input(data):
     """write to the child pty. The pty sees this as if you are typing in a real
