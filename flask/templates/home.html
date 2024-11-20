@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CTF Challenges</title>
-    <link rel="stylesheet" href="../static/style.css">
+    <link rel="stylesheet" href="style.css">
     <style>
         body, html {
             height: 100%;
@@ -20,6 +20,8 @@
 
         .matrix-content {
             margin: 50px 0;
+            position: relative; /* Ensure it is above the matrix background */
+            z-index: 1001; /* Higher than the matrix canvas */
         }
 
         /* Container settings */
@@ -139,8 +141,8 @@
     </style>
 </head>
 <body class="matrix-background">
-    <canvas id="confettiCanvas" style="position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:999;"></canvas>
-    <canvas class="matrix-canvas"></canvas>
+    <canvas id="matrixCanvas" class="matrix-canvas" style="position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:997;"></canvas>
+    <canvas id="confettiCanvas" style="position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:998;"></canvas>
     <div class="matrix-content ssh-container">
         <h1 class="title">Cybersecurity CTF Challenges</h1>
         
@@ -158,12 +160,12 @@
     </div>
 
     <footer class="footer">
-        <img src="../static/assets/images/python-pirate.png" alt="Python Pirates Icon" class="footer-icon">
+        <img src="assets/python-pirate.png" alt="Python Pirates Icon" class="footer-icon">
     </footer>
 
     <script>
         // Fetch and display challenges from JSON
-        fetch('../static/ctfs.json')
+        fetch('/scripts/ctfs.json')
             .then(response => response.json())
             .then(challenges => {
                 const challengeGrid = document.getElementById('challengeGrid');
@@ -240,7 +242,7 @@
         // Function to create Thanos rain effect
         function triggerThanosRain() {
             const thanosRainDuration = 30000; // 30 seconds
-            const thanosImage = '../static/assets/images/thanos.png';
+            const thanosImage = 'assets/thanos.png';
 
             function createThanosElement() {
                 const thanos = document.createElement('img');
@@ -306,6 +308,31 @@
                 ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the confetti from the canvas
             }, 30000); // Run confetti for 30 seconds
         }
+    </script>
+    <script>
+        var q = document.getElementById('matrixCanvas'); // Ensure this ID matches your canvas element
+        var s = window.screen;
+        var width = q.width = s.width;
+        var height = q.height = s.height;
+        var letters = [];
+
+        for (var i = 0; i < width / 10; i++) {
+            letters[i] = 0;
+        }
+
+        var draw = function () {
+            q.getContext('2d').fillStyle = 'rgba(0,0,0,.05)';
+            q.getContext('2d').fillRect(0, 0, width, height);
+            q.getContext('2d').fillStyle = '#0F0';
+            letters.map(function (y_pos, index) {
+                text = Math.round(Math.random());
+                x_pos = index * 20;
+                q.getContext('2d').font = "16px monospace";
+                q.getContext('2d').fillText(text, x_pos, y_pos);
+                letters[index] = (y_pos > 758 + Math.random() * 1e4) ? 0 : y_pos + 20;
+            });
+        };
+        setInterval(draw, 60);
     </script>
 </body>
 </html>

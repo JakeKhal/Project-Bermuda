@@ -18,7 +18,7 @@ logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
 __version__ = "0.5.0.2"
 
-app = Flask(__name__, template_folder="./templates", static_folder="./static", static_url_path="")
+app = Flask(__name__, template_folder="./templates", static_folder="./templates", static_url_path="")
 app.config["SECRET_KEY"] = "secret!"
 app.config["fd"] = None
 app.config["child_pid"] = None
