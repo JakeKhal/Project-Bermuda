@@ -116,36 +116,43 @@ def read_and_forward_pty_output(user_id):
     with app.app_context():
         max_read_bytes = 1024 * 20
         while True:
-            user = User.query.get(user_id)
-            print(f"thread for {user.email}")
-            terminal_session = Terminal_Session.query.filter_by(user_id=user_id).first()
-            if terminal_session == None:
-                return
-            alive_child = check_pid(terminal_session.pid)
-            open_fd = is_fd_open(terminal_session.fd)
+            try:
+                user = User.query.get(user_id)
+                print(f"thread for {user.email}")
+                terminal_session = Terminal_Session.query.filter_by(
+                    user_id=user_id
+                ).first()
+                if terminal_session == None:
+                    return
+                alive_child = check_pid(terminal_session.pid)
+                open_fd = is_fd_open(terminal_session.fd)
 
-            # Something happened to the session, bailing
-            if not (alive_child and open_fd):
-                return
+                # Something happened to the session, bailing
+                if not (alive_child and open_fd):
+                    return
 
-            socketio.sleep(0.01)
-            if terminal_session.fd:
-                timeout_sec = 10
-                (data_ready, _, _) = select.select(
-                    [terminal_session.fd], [], [], timeout_sec
-                )
-                if data_ready:
-                    output = os.read(terminal_session.fd, max_read_bytes).decode(
-                        errors="ignore"
+                socketio.sleep(0.01)
+                if terminal_session.fd:
+                    timeout_sec = 10
+                    (data_ready, _, _) = select.select(
+                        [terminal_session.fd], [], [], timeout_sec
                     )
-                    socketio.emit(
-                        "pty-output",
-                        {"output": output},
-                        namespace="/pty",
-                        room=user.email,
-                    )
-            else:
-                return
+                    if data_ready:
+                        output = os.read(terminal_session.fd, max_read_bytes).decode(
+                            errors="ignore"
+                        )
+                        socketio.emit(
+                            "pty-output",
+                            {"output": output},
+                            namespace="/pty",
+                            room=user.email,
+                        )
+                else:
+                    return
+            except OSError:
+                logging.info("Terminal closed, deleting session")
+                db.session.delete(terminal_session)
+                db.session.commit()
 
 
 @socketio.on("pty-input", namespace="/pty")
@@ -196,70 +203,80 @@ def connect(auth):
     if terminal_session != None:
         alive_child = check_pid(terminal_session.pid)
         open_fd = is_fd_open(terminal_session.fd)
+        new_session_needed = False
 
         if alive_child:
             os.kill(terminal_session.pid, 15)
+            new_session_needed = True
 
         if open_fd:
             os.close(terminal_session.fd)
+            new_session_needed = True
+
+        if new_session_needed:
+            subprocess.run(
+                ["/usr/bin/podman", "rm", "--force", current_user.container_name]
+            )
+            db.session.delete(terminal_session)
+            db.session.commit()
+            terminal_session = Terminal_Session(user_id=user_id)
     else:
         terminal_session = Terminal_Session(user_id=user_id)
 
-    with PodmanClient(base_url=app.config["podman_uri"]) as client:
-        # find container for current user
-        user_container = None
-        containers = client.containers
-        for container in containers.list(all=True):
-            container.reload()
-            if container.name == current_user.container_name:
-                user_container = container
+    process = subprocess.Popen(
+        [
+            "/usr/bin/podman",
+            "ps",
+            "--filter",
+            f"name={current_user.container_name}",
+            "--format",
+            "{{.Names}}",
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    stdout, stderr = process.communicate()
 
-        user_image = None 
-        for image in client.images.list():
-            if image.tags == ['localhost/kali-image:latest']:
-                user_image = image
-
-        if user_container == None:
-            user_container = containers.create(
-                image=user_image,
-                command=["/bin/bash"],
-                init=True,
-                mem_limit="300m",
-                name=current_user.container_name,
-                cap_add=["cap_net_raw"],
-            )
-
-        container_status = user_container.status
-
-        (child_pid, fd) = pty.fork()
-        if child_pid == 0:
-            # this is the child process fork.
-            # anything printed here will show up in the pty, including the output
-            # of this subprocess
-            if container_status != "running":
-                subprocess.run(["/usr/bin/podman", "exec", "-it", current_user.container_name, "/bin/bash"])
-            else:
-                subprocess.run(["/usr/bin/podman", "attach", current_user.container_name])
+    print("stdot", stdout)
+    (child_pid, fd) = pty.fork()
+    if child_pid == 0:
+        # this is the child process fork.
+        # anything printed here will show up in the pty, including the output
+        # of this subprocess
+        if stdout.strip():  # If the output is not empty, container exists
+            print("You already have a terminal session open!")
+            return
         else:
-            # this is the parent process fork.
-            # store child fd and pid
-            terminal_session.fd = fd
-            terminal_session.pid = child_pid
-            db.session.add(terminal_session)
-            db.session.commit()
-            set_winsize(fd, 50, 50)
-            # logging/print statements must go after this because... I have no idea why
-            # but if they come before the background task never starts
-            socketio.start_background_task(
-                target=read_and_forward_pty_output, user_id=user_id
+            subprocess.run(
+                [
+                    "/usr/bin/podman",
+                    "run",
+                    "--rm",
+                    "-it",
+                    "--replace",
+                    "--name",
+                    current_user.container_name,
+                    "localhost/kali-image:latest",
+                ]
             )
+            return
+    else:
+        # this is the parent process fork.
+        # store child fd and pid
+        terminal_session.fd = fd
+        terminal_session.pid = child_pid
+        db.session.add(terminal_session)
+        db.session.commit()
+        set_winsize(fd, 50, 50)
+        # logging/print statements must go after this because... I have no idea why
+        # but if they come before the background task never starts
+        socketio.start_background_task(
+            target=read_and_forward_pty_output, user_id=user_id
+        )
 
-            logging.info("child pid is " + str(child_pid))
-            logging.info(
-                f"starting background task with command `{cmd}` to continously read "
-                "and forward pty output to client"
-            )
-            logging.info("task started")
+        logging.info("child pid is " + str(child_pid))
+        logging.info("task started")
 
 
 def main():
