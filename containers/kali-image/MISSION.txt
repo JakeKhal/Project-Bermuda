@@ -1,0 +1,17 @@
+Greetings!
+
+We've been tasked with performing a pentest to ensure that our target is not
+vulnerable to password spray attacks. We've spent the last few weeks performing
+OSINT, and we've extracted some useful information about our target. We've found
+    - An ssh server on port 2222 on the server `target.uosec`
+    - A list of possible users, in `users.lst`
+We've also discovered that when user accounts are created, the password is set to
+a kind of pie until the user gets around to changing their password. Your task is
+to conduct a password spray attack against the ssh server using those users and
+the list of pies found in `pies.lst`
+
+You have a full Kali Linux system here, and I've preinstalled `hydra`, which is probably
+the tool you want to use. For information on using hydra for password sprays, check out
+this website: https://www.freecodecamp.org/news/how-to-use-hydra-pentesting-tutorial/
+
+Good luck!
