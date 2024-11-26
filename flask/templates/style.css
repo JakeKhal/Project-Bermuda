@@ -146,7 +146,7 @@ textarea:focus, input[type="password"]:focus {
     cursor: pointer;
     transition: background-color 0.3s, transform 0.2s;
     text-transform: uppercase;
-    margin-top: 25px;
+    margin-top: 20px;
 }
 
 .terminal-btn:hover {
@@ -222,11 +222,6 @@ body.matrix-background {
     height: 100vh;
 }
 
-.matrix-content {
-    position: relative;
-    z-index: 2;
-}
-
 .matrix-background-mask {
     position: fixed;
     top: 0;
@@ -244,9 +239,246 @@ body.matrix-background {
     z-index: 2;
 }
 
+.matrix-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    z-index: 2;
+}
+
 .error {
     color: rgb(139,0,0);
     font-size: 4vw;
     font-weight: bold;
     text-align: center;
+}
+
+/* Hamburger Menu Styles */
+.hamburger-menu {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 3;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.hamburger-menu div {
+    width: 30px;
+    height: 3px;
+    background-color: #fff;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.dropdown {
+    position: absolute;
+    top: 60px;
+    left: 20px;
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 10px;
+    border-radius: 8px;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 3;
+}
+
+.dropdown a {
+    color: #00ff00;
+    text-decoration: none;
+    font-size: 1rem;
+    transition: color 0.3s ease;
+}
+
+.dropdown a:hover {
+    color: #ff9800;
+}
+
+/* option1,2,3 ssh page */
+.options-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 20px;
+    width: 100%;
+}
+
+.option {
+    flex: 1;
+    min-width: 45%;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.option-large {
+    width: 100%;
+    text-align: center;
+    margin-top: 15px;
+}
+
+/* Challenge Page */
+
+/* Scrollable challenge grid container */
+.challenge-grid-container {
+    width: 100%;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+/* Grid settings */
+.challenge-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Increase minimum width to 300px */
+    gap: 20px;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.challenge-card {
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: left;
+    color: #ddd;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.challenge-title {
+    font-size: 1.6rem;
+    color: #00ff00;
+    margin-bottom: 10px;
+}
+
+.challenge-summary {
+    font-size: 1rem;
+    margin-bottom: 15px;
+}
+
+.status {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #00ff00;
+    margin-top: auto;
+}
+
+.not-completed {
+    color: #ff4500;
+}
+
+.flag-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.flag-input {
+    padding: 8px;
+    font-size: 1rem;
+    border-radius: 5px;
+    border: 1px solid #444;
+    background: #222;
+    color: #fff;
+}
+
+.flag-btn {
+    padding: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    background-color: #0078D4;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.flag-btn:hover {
+    background-color: #005bb5;
+}
+
+/* Easter egg - Thanos image styling */
+.thanos-rain {
+    position: fixed;
+    width: 60px;
+    height: 120px;
+    pointer-events: none;
+    z-index: 1000;
+    animation: fall 5s linear infinite;
+}
+
+/*info button (i) to see CTF instruction*/
+.title-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.info-btn {
+    background-color: #00ff00;
+    border: none;
+    border-radius: 50%;
+    color: #000;
+    width: 25px;
+    height: 25px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+    margin-left: 10px;
+    box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+}
+
+.info-btn:hover {
+    background-color: #ff9800;
+    color: #fff;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #222;
+    color: #00ff00;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: 0 0 10px #00ff00;
+    position: relative;
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    cursor: pointer;
+    color: #00ff00;
+    font-size: 1.2rem;
+}
+
+.close-button:hover {
+    color: #ff9800;
 }

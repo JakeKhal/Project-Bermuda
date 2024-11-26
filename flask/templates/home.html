@@ -40,100 +40,6 @@
                 inset 0 0 15px 5px rgba(0, 255, 0, 0.3);
         }
 
-        /* Scrollable challenge grid container */
-        .challenge-grid-container {
-            width: 100%;
-            max-height: 70vh;
-            overflow-y: auto;
-            padding-right: 5px;
-        }
-
-        /* Grid settings */
-        .challenge-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Increase minimum width to 300px */
-            gap: 20px;
-            width: 100%;
-            margin-top: 20px;
-        }
-
-        .challenge-card {
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 10px;
-            padding: 20px;
-            text-align: left;
-            color: #ddd;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
-            min-height: 220px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .challenge-title {
-            font-size: 1.6rem;
-            color: #00ff00;
-            margin-bottom: 10px;
-        }
-
-        .challenge-summary {
-            font-size: 1rem;
-            margin-bottom: 15px;
-        }
-
-        .status {
-            font-size: 1rem;
-            font-weight: bold;
-            color: #00ff00;
-            margin-top: auto;
-        }
-
-        .not-completed {
-            color: #ff4500;
-        }
-
-        .flag-form {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .flag-input {
-            padding: 8px;
-            font-size: 1rem;
-            border-radius: 5px;
-            border: 1px solid #444;
-            background: #222;
-            color: #fff;
-        }
-
-        .flag-btn {
-            padding: 10px;
-            font-size: 1rem;
-            font-weight: bold;
-            background-color: #0078D4;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .flag-btn:hover {
-            background-color: #005bb5;
-        }
-
-        /* Easter egg - Thanos image styling */
-        .thanos-rain {
-            position: fixed;
-            width: 60px;
-            height: 120px;
-            pointer-events: none;
-            z-index: 1000;
-            animation: fall 5s linear infinite;
-        }
-
         @keyframes fall {
             0% { transform: translateY(-100px); }
             100% { transform: translateY(100vh); }
@@ -144,6 +50,17 @@
     <canvas id="matrixCanvas" class="matrix-canvas" style="position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:997;"></canvas>
     <canvas id="confettiCanvas" style="position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:998;"></canvas>
     <div class="matrix-content ssh-container">
+        <div class="hamburger-menu" onclick="toggleDropdown()">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <div class="dropdown" id="dropdownMenu">
+            <a href="#">Settings</a>
+            <a href="#">Web Terminal</a>
+            <a href="#">Submit Flags</a>
+            <a href="#">Sign Out</a>
+        </div>
         <h1 class="title">Cybersecurity CTF Challenges</h1>
         
         <div class="instructions-box">
@@ -159,13 +76,9 @@
         </div>
     </div>
 
-    <footer class="footer">
-        <img src="assets/python-pirate.png" alt="Python Pirates Icon" class="footer-icon">
-    </footer>
-
     <script>
         // Fetch and display challenges from JSON
-        fetch('/scripts/ctfs.json')
+        fetch('scripts/ctfs.json')
             .then(response => response.json())
             .then(challenges => {
                 const challengeGrid = document.getElementById('challengeGrid');
@@ -308,8 +221,7 @@
                 ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the confetti from the canvas
             }, 30000); // Run confetti for 30 seconds
         }
-    </script>
-    <script>
+
         var q = document.getElementById('matrixCanvas'); // Ensure this ID matches your canvas element
         var s = window.screen;
         var width = q.width = s.width;
@@ -333,6 +245,12 @@
             });
         };
         setInterval(draw, 60);
+
+        function toggleDropdown() {
+            const dropdown = document.getElementById('dropdownMenu');
+            dropdown.style.display = dropdown.style.display === 'none' || dropdown.style.display === '' ? 'flex' : 'none';
+        }
+
     </script>
 </body>
 </html>
