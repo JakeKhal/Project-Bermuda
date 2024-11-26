@@ -3,9 +3,126 @@
     <meta charset="utf-8" />
     <title>Project Bermuda</title>
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+
       html {
-        font-family: arial;
+        font-family: Arial, sans-serif;
+        margin: 15px;
+        height: 100%;
       }
+
+      body {
+        margin: 0;
+        height: 100%;
+        background: linear-gradient(135deg, #2f2f2f, #003300, #00ff00);
+        background-size: 300% 300%;
+        animation: moveGradient 10s infinite;
+      }
+
+      @keyframes moveGradient {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      /* Centered title style */
+      .title {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 3em;
+        color: #00ff00;
+        text-align: center;
+        text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+        margin: 20px 0;
+        animation: pulse 2s infinite alternate;
+      }
+
+      @keyframes pulse {
+        from {
+          text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+        }
+        to {
+          text-shadow: 0 0 20px #00ff00, 0 0 30px #00ff00;
+        }
+      }
+
+      /* Status bar at the top */
+      .status-bar {
+        text-align: center;
+        font-size: 1em;
+        color: white;
+        margin: 10px 20px;
+        line-height: .3;
+        font-style: italic;
+      }
+
+      /* Footer credits */
+      p {
+        text-align: right;
+        font-size: 0.9em;
+        color: #d3d3d3;
+        margin: 10px 20px;
+        line-height: 1.5;
+        font-style: italic;
+        font-weight: bold;
+      }
+
+      a {
+        color: lightgreen;
+        text-decoration: none;
+
+      }
+      /* Hamburger Menu Styles */
+      .hamburger-menu {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        z-index: 3;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .hamburger-menu div {
+        width: 30px;
+        height: 3px;
+        background-color: #fff;
+        border-radius: 2px;
+        transition: all 0.3s ease;
+      }
+
+      .dropdown {
+        position: absolute;
+        top: 60px;
+        left: 20px;
+        background-color: rgba(0, 0, 0, 0.8);
+        padding: 10px;
+        border-radius: 8px;
+        display: none;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 3;
+      }
+
+      .dropdown a {
+        color: #00ff00;
+        text-decoration: none;
+        text-align: center;
+        display: block;
+        font-size: 1rem;
+        transition: color 0.3s ease;
+      }
+
+      .dropdown a:hover {
+        color: #ff9800;
+      }
+
     </style>
     <link
       rel="stylesheet"
@@ -13,20 +130,39 @@
     />
   </head>
   <body>
-      <a href="https://github.com/cs01/pyxtermjs" target="_blank" style="font-size: 1.4em; text-decoration: none; color:black">Project Bermuda</a
-      >&nbsp;&nbsp;&nbsp;
-    </a>
-    <span style="font-size: small"
-      >status:
-      <span style="font-size: small" id="status">connecting...</span></span
-    >
+    <!-- Hamburger Menu -->
+    <div class="hamburger-menu" onclick="toggleDropdown()">
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
 
-    <div style="width: 100%; height: calc(100% - 50px)" id="terminal"></div>
+    <!-- Dropdown Menu -->
+    <div class="dropdown" id="dropdownMenu">
+      <a href="#">Settings</a>
+      <a href="#">Web Terminal</a>
+      <a href="#">Submit Flags</a>
+      <a href="#">Sign Out</a>
+    </div>
+    <!-- Centered Project Bermuda Title -->
+    <div class="title">Project Bermuda</div>
 
-    <p style="text-align: right; font-size: small">
-      built by <a href="https://chadsmith.dev">Chad Smith</a>
-      <a href="https://github.com/cs01">GitHub</a>
+    <!-- Status Bar -->
+    <div class="status-bar">
+      status: <span id="status">connecting...</span>
+    </div>
+
+    <!-- Terminal Section -->
+    <div style="width: 100%; height: calc(100% - 150px);" id="terminal"></div>
+
+    <!-- Footer -->
+    <p>
+      Python Pirates 
+      <span style="color: #00ff00; font-style: normal; font-weight: normal;">
+        [ SS | EC | AI | JK ]
+      </span>
     </p>
+    
     <!-- xterm -->
     <script src="https://unpkg.com/xterm@4.11.0/lib/xterm.js"></script>
     <script src="https://unpkg.com/xterm-addon-fit@0.5.0/lib/xterm-addon-fit.js"></script>
@@ -36,6 +172,25 @@ ch.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
 
     <script>
+    function toggleDropdown() {
+      const dropdownMenu = document.getElementById('dropdownMenu');
+      dropdownMenu.style.display =
+        dropdownMenu.style.display === 'flex' ? 'none' : 'flex';
+
+      // Add event listeners to the dropdown menu items
+      const menuItems = dropdownMenu.querySelectorAll('a');
+      menuItems.forEach((item) => {
+        item.addEventListener('click', function (event) {
+          const proceed = confirm(
+            'Warning: Your terminal progress may be lost.\nWould you like to continue?'
+          );
+          if (!proceed) {
+            event.preventDefault(); // Prevent the default action if the user cancels
+          }
+        });
+      });
+    }
+    
       const term = new Terminal({
         cursorBlink: true,
         macOptionIsMeta: true,

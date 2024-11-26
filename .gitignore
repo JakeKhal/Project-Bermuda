@@ -3,3 +3,4 @@ flask/log_file.log
 __pycache__/
 venv
 instances
+flask/logfile.log

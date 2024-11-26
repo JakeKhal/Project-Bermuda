@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTF Challenges</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body, html {
+            height: 100%;
+            overflow-y: hidden;
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            color: #fff;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .matrix-content {
+            margin: 50px 0;
+            position: relative; /* Ensure it is above the matrix background */
+            z-index: 1001; /* Higher than the matrix canvas */
+        }
+
+        /* Container settings */
+        .ssh-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 95vw; /* Allow the container to use most of the viewport width */
+            max-width: 1400px; /* Set a larger max-width */
+            padding: 20px; /* Reduce padding to fit more items */
+            background: rgba(34, 34, 34, 0.97);
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 
+                0 0 15px 5px rgba(0, 255, 0, 0.4),
+                inset 0 0 15px 5px rgba(0, 255, 0, 0.3);
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-100px); }
+            100% { transform: translateY(100vh); }
+        }
+    </style>
+</head>
+<body class="matrix-background">
+    <canvas id="matrixCanvas" class="matrix-canvas" style="position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:997;"></canvas>
+    <canvas id="confettiCanvas" style="position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:998;"></canvas>
+    <div class="matrix-content ssh-container">
+        <div class="hamburger-menu" onclick="toggleDropdown()">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <div class="dropdown" id="dropdownMenu">
+            <a href="#">Settings</a>
+            <a href="#">Web Terminal</a>
+            <a href="#">Submit Flags</a>
+            <a href="#">Sign Out</a>
+        </div>
+        <h1 class="title">Cybersecurity CTF Challenges</h1>
+        
+        <div class="instructions-box">
+            <h2>Choose a Challenge</h2>
+            <p>Select a challenge to test and expand your cybersecurity skills. Submit the correct flag to mark the challenge as completed.</p>
+        </div>
+        
+        <!-- Scrollable Challenge Grid Container -->
+        <div class="challenge-grid-container">
+            <div class="challenge-grid" id="challengeGrid">
+                <!-- Challenges will be injected here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fetch and display challenges from JSON
+        fetch('scripts/ctfs.json')
+            .then(response => response.json())
+            .then(challenges => {
+                const challengeGrid = document.getElementById('challengeGrid');
+                
+                challenges.forEach((challenge, index) => {
+                    // Create challenge card
+                    const card = document.createElement('div');
+                    card.className = 'challenge-card';
+
+                    // Title
+                    const title = document.createElement('div');
+                    title.className = 'challenge-title';
+                    title.textContent = challenge.title;
+                    card.appendChild(title);
+
+                    // Summary
+                    const summary = document.createElement('div');
+                    summary.className = 'challenge-summary';
+                    summary.textContent = challenge.summary;
+                    card.appendChild(summary);
+
+                    // Status
+                    const status = document.createElement('div');
+                    status.className = 'status ' + (challenge.completed ? 'completed' : 'not-completed');
+                    status.textContent = challenge.completed ? 'Completed' : 'Not Completed';
+                    card.appendChild(status);
+
+                    // Flag form
+                    const form = document.createElement('div');
+                    form.className = 'flag-form';
+                    
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.placeholder = 'Enter flag here';
+                    input.className = 'flag-input';
+                    input.id = `flag-input-${index}`;
+                    form.appendChild(input);
+
+                    const button = document.createElement('button');
+                    button.textContent = 'Submit Flag';
+                    button.className = 'flag-btn';
+                    button.onclick = () => {
+                        const userFlag = input.value.trim();
+                        if (userFlag === challenge.flag) {
+                            status.textContent = 'Completed';
+                            status.classList.remove('not-completed');
+                            status.classList.add('completed');
+                            checkAllChallengesCompleted();
+                        } else {
+                            alert('Incorrect flag. Try again!');
+                        }
+                    };
+                    form.appendChild(button);
+
+                    card.appendChild(form);
+
+                    // Append card to grid
+                    challengeGrid.appendChild(card);
+                });
+            })
+            .catch(error => console.error('Error loading challenges:', error));
+
+        // Check if all challenges are completed and trigger the Thanos rain and confetti
+        function checkAllChallengesCompleted() {
+            const statuses = document.querySelectorAll('.status');
+            const allCompleted = Array.from(statuses).every(status => status.classList.contains('completed'));
+
+            if (allCompleted) {
+                triggerThanosRain();
+                triggerConfetti();
+            }
+        }
+
+        // Function to create Thanos rain effect
+        function triggerThanosRain() {
+            const thanosRainDuration = 30000; // 30 seconds
+            const thanosImage = 'assets/thanos.png';
+
+            function createThanosElement() {
+                const thanos = document.createElement('img');
+                thanos.src = thanosImage;
+                thanos.className = 'thanos-rain';
+                thanos.style.left = Math.random() * window.innerWidth + 'px';
+                document.body.appendChild(thanos);
+
+                // Remove Thanos image after animation completes
+                setTimeout(() => {
+                    thanos.remove();
+                }, 5000);
+            }
+
+            // Create Thanos rain effect every 200ms for 30 seconds
+            const interval = setInterval(createThanosElement, 200);
+            setTimeout(() => clearInterval(interval), thanosRainDuration);
+        }
+
+        // Function to trigger confetti animation
+        function triggerConfetti() {
+            const canvas = document.getElementById('confettiCanvas');
+            const ctx = canvas.getContext('2d');
+            const confettiParticles = [];
+
+            // Adjust confetti particle attributes
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            for (let i = 0; i < 150; i++) {
+                confettiParticles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                    size: Math.random() * 8 + 4,
+                    speedY: Math.random() * 3 + 1,
+                    speedX: Math.random() * 2 - 1
+                });
+            }
+
+            function drawConfetti() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                confettiParticles.forEach((particle) => {
+                    ctx.fillStyle = particle.color;
+                    ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
+                    particle.y += particle.speedY;
+                    particle.x += particle.speedX;
+
+                    // Reset confetti position when it falls off screen
+                    if (particle.y > canvas.height) {
+                        particle.y = -particle.size;
+                        particle.x = Math.random() * canvas.width;
+                    }
+                });
+            }
+
+            // Start the confetti animation
+            const confettiInterval = setInterval(drawConfetti, 20);
+            
+            // Stop the confetti animation and clear the canvas after 30 seconds
+            setTimeout(() => {
+                clearInterval(confettiInterval); // Stop the animation loop
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the confetti from the canvas
+            }, 30000); // Run confetti for 30 seconds
+        }
+
+        var q = document.getElementById('matrixCanvas'); // Ensure this ID matches your canvas element
+        var s = window.screen;
+        var width = q.width = s.width;
+        var height = q.height = s.height;
+        var letters = [];
+
+        for (var i = 0; i < width / 10; i++) {
+            letters[i] = 0;
+        }
+
+        var draw = function () {
+            q.getContext('2d').fillStyle = 'rgba(0,0,0,.05)';
+            q.getContext('2d').fillRect(0, 0, width, height);
+            q.getContext('2d').fillStyle = '#0F0';
+            letters.map(function (y_pos, index) {
+                text = Math.round(Math.random());
+                x_pos = index * 20;
+                q.getContext('2d').font = "16px monospace";
+                q.getContext('2d').fillText(text, x_pos, y_pos);
+                letters[index] = (y_pos > 758 + Math.random() * 1e4) ? 0 : y_pos + 20;
+            });
+        };
+        setInterval(draw, 60);
+
+        function toggleDropdown() {
+            const dropdown = document.getElementById('dropdownMenu');
+            dropdown.style.display = dropdown.style.display === 'none' || dropdown.style.display === '' ? 'flex' : 'none';
+        }
+
+    </script>
+</body>
+</html>

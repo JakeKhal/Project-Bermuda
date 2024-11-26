@@ -1,0 +1,37 @@
+[
+    {
+        "title": "Challenge 1: Decode the Cipher",
+        "summary": "Decrypt a hidden message using basic cryptographic techniques.",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut consequat leo nec ultricies tincidunt.",
+        "completed": false,
+        "flag": "1"
+    },
+    {
+        "title": "Challenge 2: Break the Hash",
+        "summary": "Crack the hashed password to gain access to the system.",
+        "description": "Vestibulum ac est non nisl pharetra interdum non nec nisl. Integer posuere eros sed quam posuere fermentum.",
+        "completed": false,
+        "flag": "2"
+    },
+    {
+        "title": "Challenge 3: Web Exploitation",
+        "summary": "Find vulnerabilities in the web application to retrieve hidden data.",
+        "description": "Nullam dictum massa vel nulla vehicula, non consequat nisl efficitur. Donec ut dolor ac nisi euismod aliquam.",
+        "completed": false,
+        "flag": "3"
+    },
+    {
+        "title": "Challenge 4: Reverse Engineering",
+        "summary": "Analyze the executable to reveal the hidden information.",
+        "description": "Proin at orci vel est aliquet scelerisque. Etiam vulputate nisl non massa consequat, ac efficitur lorem vehicula.",
+        "completed": false,
+        "flag": "4"
+    },
+    {
+        "title": "Challenge 5: Digital Forensics",
+        "summary": "Examine data and uncover clues in this forensic challenge.",
+        "description": "Phasellus accumsan velit nec justo vehicula, a sagittis tortor vehicula. Vivamus commodo, lorem nec auctor posuere.",
+        "completed": false,
+        "flag": "5"
+    }
+]

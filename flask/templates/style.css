@@ -1,0 +1,484 @@
+/* General styling */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1a1a1a;
+    color: #fff;
+    overflow: hidden;
+}
+
+/* Center container layout with flexbox for full-width effect */
+.ssh-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 80vw;
+    max-width: 700px;
+    padding: 30px;
+    background: rgba(34, 34, 34, 0.97);
+    border-radius: 10px;
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    backdrop-filter: blur(10px);
+
+    /* Softer, uniform glow around all sides */
+    box-shadow: 
+        0 0 15px 5px rgba(0, 255, 0, 0.4), /* Softer outer glow */
+        inset 0 0 15px 5px rgba(0, 255, 0, 0.3); /* Softer inner glow */
+}
+
+/* Centered Title with subtle glow */
+.title {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    font-family: 'Courier New', Courier, monospace;
+    color: #00ff00;
+    text-shadow: 0 0 1px #00ff00;
+}
+
+/* Instructions box styling */
+.instructions-box {
+    width: 100%;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 8px;
+    color: #ddd;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+    margin-bottom: 20px;
+}
+
+.instructions-box h2 {
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+}
+
+/* Section box for SSH and password grouping */
+.section-box {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+/* Input group styling */
+.input-group {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+textarea, input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 2px solid #444;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    transition: border-color 0.3s;
+}
+
+textarea {
+    height: 100px;
+}
+
+textarea:focus, input[type="password"]:focus {
+    border-color: #00ff00;
+}
+
+.glow {
+    border-color: #00ff00;
+    box-shadow: 0 0 15px #00ff00;
+}
+
+/* Button styling */
+.submit-ssh-btn, .enter-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    background-color: #0078D4;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 10px;
+}
+
+.submit-ssh-btn:hover, .enter-btn:hover {
+    background-color: #005bb5;
+}
+
+.submit-ssh-btn[disabled] {
+    background-color: #333;
+    cursor: not-allowed;
+}
+
+/* Web terminal access button */
+.terminal-btn {
+    width: 100%;
+    padding: 20px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    background-color: #ff9800;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    text-transform: uppercase;
+    margin-top: 20px;
+}
+
+.terminal-btn:hover {
+    background-color: #e68900;
+    transform: translateY(-3px);
+}
+
+.footer {
+    position: fixed; 
+    bottom: 10px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    opacity: .9;
+    z-index: 1000;
+}
+
+.footer-icon {
+    width: 64px;
+    height: auto; 
+    margin-right: 5px;
+}
+
+.footer span {
+    color: #fff;
+    font-size: 1rem;
+}
+
+.auth-btn {
+    width: 100%;
+    padding: 20px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    background-color: #0078D4;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    text-transform: uppercase;
+    margin-top: 25px;
+}
+
+.auth-btn:hover {
+    background-color: #005bb5;
+    transform: translateY(-3px);
+}
+
+.logo {
+    width: 300px;
+    height: auto;
+    display: block;
+    margin: 20px auto 0;
+}
+
+
+/* Matrix Background Styles */
+body.matrix-background {
+    background-color: #000000;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.matrix-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    background-color: rgb(0, 0, 0);
+    font-family: monospace;
+    width: 100vw;
+    height: 100vh;
+}
+
+.matrix-background-mask {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.matrix-background-image {
+    width: 100vw;
+    height: 100vh;
+    background-image: linear-gradient(180deg, rgb(0, 0, 0) 0%, rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0) 70%, rgb(0, 0, 0) 100%);
+    z-index: 2;
+}
+
+.matrix-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    z-index: 2;
+}
+
+.error {
+    color: rgb(139,0,0);
+    font-size: 4vw;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Hamburger Menu Styles */
+.hamburger-menu {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 3;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.hamburger-menu div {
+    width: 30px;
+    height: 3px;
+    background-color: #fff;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.dropdown {
+    position: absolute;
+    top: 60px;
+    left: 20px;
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 10px;
+    border-radius: 8px;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 3;
+}
+
+.dropdown a {
+    color: #00ff00;
+    text-decoration: none;
+    font-size: 1rem;
+    transition: color 0.3s ease;
+}
+
+.dropdown a:hover {
+    color: #ff9800;
+}
+
+/* option1,2,3 ssh page */
+.options-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 20px;
+    width: 100%;
+}
+
+.option {
+    flex: 1;
+    min-width: 45%;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.option-large {
+    width: 100%;
+    text-align: center;
+    margin-top: 15px;
+}
+
+/* Challenge Page */
+
+/* Scrollable challenge grid container */
+.challenge-grid-container {
+    width: 100%;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+/* Grid settings */
+.challenge-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Increase minimum width to 300px */
+    gap: 20px;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.challenge-card {
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: left;
+    color: #ddd;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.challenge-title {
+    font-size: 1.6rem;
+    color: #00ff00;
+    margin-bottom: 10px;
+}
+
+.challenge-summary {
+    font-size: 1rem;
+    margin-bottom: 15px;
+}
+
+.status {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #00ff00;
+    margin-top: auto;
+}
+
+.not-completed {
+    color: #ff4500;
+}
+
+.flag-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.flag-input {
+    padding: 8px;
+    font-size: 1rem;
+    border-radius: 5px;
+    border: 1px solid #444;
+    background: #222;
+    color: #fff;
+}
+
+.flag-btn {
+    padding: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    background-color: #0078D4;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.flag-btn:hover {
+    background-color: #005bb5;
+}
+
+/* Easter egg - Thanos image styling */
+.thanos-rain {
+    position: fixed;
+    width: 60px;
+    height: 120px;
+    pointer-events: none;
+    z-index: 1000;
+    animation: fall 5s linear infinite;
+}
+
+/*info button (i) to see CTF instruction*/
+.title-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.info-btn {
+    background-color: #00ff00;
+    border: none;
+    border-radius: 50%;
+    color: #000;
+    width: 25px;
+    height: 25px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+    margin-left: 10px;
+    box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+}
+
+.info-btn:hover {
+    background-color: #ff9800;
+    color: #fff;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #222;
+    color: #00ff00;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: 0 0 10px #00ff00;
+    position: relative;
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    cursor: pointer;
+    color: #00ff00;
+    font-size: 1.2rem;
+}
+
+.close-button:hover {
+    color: #ff9800;
+}
