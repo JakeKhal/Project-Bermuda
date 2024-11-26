@@ -102,13 +102,6 @@
             const sshKey = document.getElementById('ssh-key').value;
             if (sshKey) {
                 document.getElementById('ssh-key').classList.add('glow');
-<<<<<<< HEAD
-                const button = document.getElementById('submit-btn');
-                button.textContent = "Submitted";
-                button.disabled = true;
-            }
-        }
-=======
                 const button = document.querySelector('.submit-ssh-btn');
                 button.textContent = "✓ SSH Key Submitted";
                 button.disabled = true;
@@ -136,7 +129,6 @@
             dropdown.style.display = dropdown.style.display === 'none' || dropdown.style.display === '' ? 'flex' : 'none';
         }
 
->>>>>>> 7cb1fe9901d8c2d353505b280b254103dfa17ce0
     </script>
 </body>
 </html>
