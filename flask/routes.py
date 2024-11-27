@@ -36,11 +36,11 @@ __version__ = "0.5.0.2"
 app = Flask(
     __name__,
     template_folder="./templates",
-    static_folder="./templates",
+    static_folder="./static",
     static_url_path="",
 )
 
-with open('credentials.json', 'r') as file:
+with open('credentials.json.enc', 'r') as file:
     config = json.load(file)
 
 app.config["SECRET_KEY"] = config['FLASK_SECRET']
@@ -161,6 +161,10 @@ def whoami():
 @app.route("/landing")
 def landing():
     return render_template("landing.html")
+
+#@app.route("/home")
+#def home():
+#    return render_template("home.html")
 
 
 @app.route("/terminal")

@@ -5,3 +5,4 @@ venv
 instances
 flask/logfile.log
 flask/credentials.json
+flask/credentials.json.enc
