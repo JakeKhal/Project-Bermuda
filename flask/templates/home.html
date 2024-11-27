@@ -78,7 +78,7 @@
 
     <script>
         // Fetch and display challenges from JSON
-        fetch('scripts/ctfs.json')
+        fetch('challenges')
             .then(response => response.json())
             .then(challenges => {
                 const challengeGrid = document.getElementById('challengeGrid');

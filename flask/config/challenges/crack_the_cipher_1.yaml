@@ -1,0 +1,5 @@
+crack_the_cipher_1:
+  title: "Challenge 1: Decode the Cipher"
+  summary: "Decrypt a hidden message using basic cryptographic techniques."
+  description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut consequat leo nec ultricies tincidunt."
+  flag: "1"

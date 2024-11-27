@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-import argparse
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, join_room
 import flask
 import pty
@@ -11,7 +10,6 @@ import termios
 import uuid
 import struct
 import fcntl
-import shlex
 import logging
 import sys
 import socket
@@ -25,9 +23,8 @@ import requests
 from authlib.integrations.flask_client import OAuth
 from sqlalchemy.orm import DeclarativeBase
 from db import *
+from config import *
 from utils import *
-from podman import PodmanClient
-
 
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
@@ -40,27 +37,13 @@ app = Flask(
     static_url_path="",
 )
 
-with open('credentials.json', 'r') as file:
-    config = json.load(file)
-
-app.config["SECRET_KEY"] = config['FLASK_SECRET']
-app.config["podman_uri"] = "unix:///run/user/1000/podman/podman.sock"
+app.config["SECRET_KEY"] = credentials["FLASK_SECRET"]
 socketio = SocketIO(app)
 login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "/landing"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
 db.init_app(app)
-
-# Set your Azure AD credentials
-CLIENT_ID = config['CLIENT_ID']
-CLIENT_SECRET =  config['CLIENT_SECRET'] 
-TENANT_ID = config['TENANT_ID'] 
-AUTHORITY = f'https://login.microsoftonline.com/{TENANT_ID}'
-SCOPES = ['User.Read']
-REDIRECT_URI = 'http://localhost:5000/callback'
-
-
 
 # MSAL ConfidentialClientApplication
 app_msal = msal.ConfidentialClientApplication(
@@ -71,12 +54,12 @@ app_msal = msal.ConfidentialClientApplication(
 
 oauth = OAuth(app)
 azure = oauth.register(
-    name='azure',
+    name="azure",
     client_id=CLIENT_ID,
     client_secret=CLIENT_SECRET,
-    authorize_url=f'{AUTHORITY}/oauth2/v2.0/authorize',
-    access_token_url=f'{AUTHORITY}/oauth2/v2.0/token',
-    client_kwargs={'scope': 'openid profile email User.Read'},
+    authorize_url=f"{AUTHORITY}/oauth2/v2.0/authorize",
+    access_token_url=f"{AUTHORITY}/oauth2/v2.0/token",
+    client_kwargs={"scope": "openid profile email User.Read"},
     redirect_uri=REDIRECT_URI,
 )
 
@@ -88,24 +71,23 @@ with app.app_context():
 def user_loader(email):
     return User.query.filter_by(email=email).first()
 
-@app.route('/authenticate')
+
+@app.route("/authenticate")
 def login():
     # Redirect to Azure AD authorization endpoint
     return azure.authorize_redirect(redirect_uri=REDIRECT_URI)
 
 
-@app.route('/callback')
+@app.route("/callback")
 def callback():
     # Get the authorization code from the query parameters
-    code = request.args.get('code')
+    code = request.args.get("code")
     if not code:
         return "Authorization failed: No authorization code provided."
 
     # Exchange the authorization code for tokens using MSAL
     result = app_msal.acquire_token_by_authorization_code(
-        code,
-        scopes=SCOPES,
-        redirect_uri=REDIRECT_URI
+        code, scopes=SCOPES, redirect_uri=REDIRECT_URI
     )
 
     if "access_token" in result:
@@ -113,16 +95,16 @@ def callback():
 
         # Fetch user information
         user_info_response = requests.get(
-            'https://graph.microsoft.com/v1.0/me',
-            headers={'Authorization': f'Bearer {access_token}'}
+            "https://graph.microsoft.com/v1.0/me",
+            headers={"Authorization": f"Bearer {access_token}"},
         )
 
         if user_info_response.status_code == 200:
             user_info = user_info_response.json()
-            email = user_info.get('mail') or user_info.get('userPrincipalName')
+            email = user_info.get("mail") or user_info.get("userPrincipalName")
 
             # Check if the user's email ends with @uoregon.edu
-            if email and email.endswith('@uoregon.edu'):
+            if email and email.endswith("@uoregon.edu"):
                 user = User.query.filter_by(email=email).first()
                 if user is None:
                     user = User(email=email, container_name=str(uuid.uuid4()))
@@ -139,6 +121,7 @@ def callback():
 
     return f"Failed to acquire token: {result.get('error_description')}"
 
+
 @app.route("/")
 @flask_login.login_required
 def index():
@@ -151,13 +134,16 @@ def logout():
     flask_login.logout_user()
     return render_template("landing.html")
 
+
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('404.html'), 404
+    return render_template("404.html"), 404
+
 
 @app.errorhandler(403)
 def forbidden(e):
-    return render_template('403.html'), 403
+    return render_template("403.html"), 403
+
 
 @app.route("/whoami")
 @flask_login.login_required
@@ -169,13 +155,67 @@ def whoami():
 def landing():
     return render_template("landing.html")
 
+
 @app.route("/home")
+@flask_login.login_required
 def home():
     return render_template("home.html")
 
 
+@app.route("/challenges", methods=["GET", "POST"])
+@flask_login.login_required
+def manage_challenges():
+    if request.method == "GET":
+        solved_challenges = []
+        for solve in Challenge_Solve.query.filter_by(user_id=current_user.id).all():
+            solved_challenges.append(solve.challenge_id)
+
+        user_challenges = []
+        for challenge_id in challenges.keys():
+            challenge = {
+                "id": challenge_id,
+                "title": challenges[challenge_id]["title"],
+                "summary": challenges[challenge_id]["summary"],
+                "description": challenges[challenge_id]["description"],
+                "completed": challenge_id in solved_challenges,
+            }
+            user_challenges.append(challenge)
+        return jsonify(user_challenges)
+
+    elif request.method == "POST":
+        data = request.get_json()
+        challenge_id = data.get("challenge_id")
+        flag = data.get("flag")
+
+        if not challenge_id or not flag:
+            return jsonify({"status": "err", "message": "Missing challenge_id or flag"})
+
+        # Validate the challenge ID
+        if challenge_id not in challenges:
+            return jsonify({"status": "err", "message": "Invalid challenge ID"})
+
+        # Check if the flag is correct
+        if challenges[challenge_id]["flag"] == flag:
+            # Check if the user has already solved the challenge
+            existing_solve = Challenge_Solve.query.filter_by(user_id=current_user.id, challenge_id=challenge_id).first()
+            if existing_solve:
+                return jsonify({"status": "err", "message": "Challenge already solved"})
+
+            # Mark the challenge as solved
+            new_solve = Challenge_Solve(
+                challenge_id=challenge_id,
+                user_id=current_user.id
+            )
+            db.session.add(new_solve)
+            db.session.commit()
+
+            return jsonify({"status": "ok", "message": "Challenge solved successfully!"})
+        else:
+            return jsonify({"status": "err", "message": "Incorrect flag"})
+
+
 @app.route("/terminal")
-# @flask_login.login_required
+@flask_login.login_required
 def terminal():
     return render_template("terminal.html")
 
@@ -192,7 +232,6 @@ def read_and_forward_pty_output(user_id):
         while True:
             try:
                 user = User.query.get(user_id)
-                print(f"thread for {user.email}")
                 terminal_session = Terminal_Session.query.filter_by(
                     user_id=user_id
                 ).first()
@@ -223,8 +262,8 @@ def read_and_forward_pty_output(user_id):
                         )
                 else:
                     return
-            except OSError:
-                logging.info("Terminal closed, deleting session")
+            except:
+                logging.info("Error forwarding data, closing session")
                 db.session.delete(terminal_session)
                 db.session.commit()
 
@@ -277,64 +316,46 @@ def connect(auth):
     if terminal_session != None:
         alive_child = check_pid(terminal_session.pid)
         open_fd = is_fd_open(terminal_session.fd)
-        new_session_needed = False
 
         if alive_child:
             os.kill(terminal_session.pid, 15)
-            new_session_needed = True
 
         if open_fd:
             os.close(terminal_session.fd)
-            new_session_needed = True
 
-        if new_session_needed:
-            subprocess.run(
-                ["/usr/bin/podman", "rm", "--force", current_user.container_name]
-            )
-            db.session.delete(terminal_session)
-            db.session.commit()
-            terminal_session = Terminal_Session(user_id=user_id)
-    else:
-        terminal_session = Terminal_Session(user_id=user_id)
+        subprocess.run(
+            [
+                "/usr/bin/podman",
+                "rm",
+                "--time",
+                "1",
+                "--force",
+                current_user.container_name,
+            ]
+        )
+        db.session.delete(terminal_session)
+        db.session.commit()
 
-    process = subprocess.Popen(
-        [
-            "/usr/bin/podman",
-            "ps",
-            "--filter",
-            f"name={current_user.container_name}",
-            "--format",
-            "{{.Names}}",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-    )
-    stdout, stderr = process.communicate()
+    terminal_session = Terminal_Session(user_id=user_id)
 
-    print("stdot", stdout)
     (child_pid, fd) = pty.fork()
     if child_pid == 0:
         # this is the child process fork.
         # anything printed here will show up in the pty, including the output
         # of this subprocess
-        if stdout.strip():  # If the output is not empty, container exists
-            print("You already have a terminal session open!")
-            return
-        else:
-            subprocess.run(
-                [
-                    "/usr/bin/podman",
-                    "run",
-                    "--rm",
-                    "-it",
-                    "--replace",
-                    "--name",
-                    current_user.container_name,
-                    "localhost/kali-image:latest",
-                ]
-            )
-            return
+        subprocess.run(
+            [
+                "/usr/bin/podman",
+                "run",
+                "--rm",
+                "-it",
+                "--replace",
+                "--name",
+                current_user.container_name,
+                config["image_name"],
+            ]
+        )
+        return
     else:
         # this is the parent process fork.
         # store child fd and pid
