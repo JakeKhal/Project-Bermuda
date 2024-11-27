@@ -36,7 +36,7 @@ __version__ = "0.5.0.2"
 app = Flask(
     __name__,
     template_folder="./templates",
-    static_folder="./templates",
+    static_folder="./static",
     static_url_path="",
 )
 
@@ -161,6 +161,10 @@ def whoami():
 @app.route("/landing")
 def landing():
     return render_template("landing.html")
+
+#@app.route("/home")
+#def home():
+#    return render_template("home.html")
 
 
 @app.route("/terminal")
