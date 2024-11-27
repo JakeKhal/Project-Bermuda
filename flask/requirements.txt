@@ -22,6 +22,7 @@ pycparser==2.22
 PyJWT==2.10.0
 python-engineio==4.10.1
 python-socketio==5.11.4
+PyYAML==6.0.2
 requests==2.32.3
 simple-websocket==1.1.0
 SQLAlchemy==2.0.36
