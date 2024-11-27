@@ -3,5 +3,6 @@ flask/log_file.log
 __pycache__/
 venv
 flask/logfile.log
-flask/credentials.json
-*.db
+flask/config/credentials.json
+flask/instance/*
+flask/instance/project.db

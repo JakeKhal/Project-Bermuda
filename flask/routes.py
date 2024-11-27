@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, join_room
 import flask
 import pty
@@ -10,7 +10,6 @@ import termios
 import uuid
 import struct
 import fcntl
-import shlex
 import logging
 import sys
 import socket
@@ -24,9 +23,8 @@ import requests
 from authlib.integrations.flask_client import OAuth
 from sqlalchemy.orm import DeclarativeBase
 from db import *
+from config import *
 from utils import *
-from podman import PodmanClient
-
 
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
@@ -39,26 +37,13 @@ app = Flask(
     static_url_path="",
 )
 
-with open("credentials.json", "r") as file:
-    config = json.load(file)
-
-app.config["SECRET_KEY"] = config["FLASK_SECRET"]
-app.config["podman_uri"] = "unix:///run/user/1000/podman/podman.sock"
+app.config["SECRET_KEY"] = credentials["FLASK_SECRET"]
 socketio = SocketIO(app)
 login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "/landing"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
 db.init_app(app)
-
-# Set your Azure AD credentials
-CLIENT_ID = config["CLIENT_ID"]
-CLIENT_SECRET = config["CLIENT_SECRET"]
-TENANT_ID = config["TENANT_ID"]
-AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
-SCOPES = ["User.Read"]
-REDIRECT_URI = "http://localhost:5000/callback"
-
 
 # MSAL ConfidentialClientApplication
 app_msal = msal.ConfidentialClientApplication(
@@ -171,15 +156,66 @@ def landing():
     return render_template("landing.html")
 
 
-@flask_login.login_required
 @app.route("/home")
+@flask_login.login_required
 def home():
     return render_template("home.html")
 
 
+@app.route("/challenges", methods=["GET", "POST"])
 @flask_login.login_required
+def manage_challenges():
+    if request.method == "GET":
+        solved_challenges = []
+        for solve in Challenge_Solve.query.filter_by(user_id=current_user.id).all():
+            solved_challenges.append(solve.challenge_id)
+
+        user_challenges = []
+        for challenge_id in challenges.keys():
+            challenge = {
+                "id": challenge_id,
+                "title": challenges[challenge_id]["title"],
+                "summary": challenges[challenge_id]["summary"],
+                "description": challenges[challenge_id]["description"],
+                "completed": challenge_id in solved_challenges,
+            }
+            user_challenges.append(challenge)
+        return jsonify(user_challenges)
+
+    elif request.method == "POST":
+        data = request.get_json()
+        challenge_id = data.get("challenge_id")
+        flag = data.get("flag")
+
+        if not challenge_id or not flag:
+            return jsonify({"status": "err", "message": "Missing challenge_id or flag"})
+
+        # Validate the challenge ID
+        if challenge_id not in challenges:
+            return jsonify({"status": "err", "message": "Invalid challenge ID"})
+
+        # Check if the flag is correct
+        if challenges[challenge_id]["flag"] == flag:
+            # Check if the user has already solved the challenge
+            existing_solve = Challenge_Solve.query.filter_by(user_id=current_user.id, challenge_id=challenge_id).first()
+            if existing_solve:
+                return jsonify({"status": "err", "message": "Challenge already solved"})
+
+            # Mark the challenge as solved
+            new_solve = Challenge_Solve(
+                challenge_id=challenge_id,
+                user_id=current_user.id
+            )
+            db.session.add(new_solve)
+            db.session.commit()
+
+            return jsonify({"status": "ok", "message": "Challenge solved successfully!"})
+        else:
+            return jsonify({"status": "err", "message": "Incorrect flag"})
+
+
 @app.route("/terminal")
-# @flask_login.login_required
+@flask_login.login_required
 def terminal():
     return render_template("terminal.html")
 
@@ -316,7 +352,7 @@ def connect(auth):
                 "--replace",
                 "--name",
                 current_user.container_name,
-                "localhost/kali-image:latest",
+                config["image_name"],
             ]
         )
         return
