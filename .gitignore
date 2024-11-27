@@ -5,3 +5,4 @@ venv
 flask/instances/project.db
 flask/logfile.log
 flask/credentials.json
+flask/instance/project.db
