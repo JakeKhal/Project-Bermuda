@@ -2,7 +2,6 @@ flask/log_file.log
 .venv/
 __pycache__/
 venv
-instances
+flask/instances/project.db
 flask/logfile.log
 flask/credentials.json
-flask/credentials.json.enc
