@@ -40,7 +40,7 @@ app = Flask(
     static_url_path="",
 )
 
-with open('credentials.json.enc', 'r') as file:
+with open('credentials.json', 'r') as file:
     config = json.load(file)
 
 app.config["SECRET_KEY"] = config['FLASK_SECRET']
