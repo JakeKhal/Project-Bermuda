@@ -28,16 +28,16 @@
                 <div></div>
             </div>
             <div class="dropdown" id="dropdownMenu">
-                <a href="#">Settings</a>
-                <a href="#">Web Terminal</a>
-                <a href="#">Submit Flags</a>
-                <a href="#">Sign Out</a>
+                <a href="/">Settings</a>
+                <a href="/terminal">Web Terminal</a>
+                <a href="/home">Submit Flags</a>
+                <a href="/logout">Sign Out</a>
             </div>
             <h1 class="title" style="text-align: center;">UOCSC - CTF Access</h1>
             <div class="instructions-box" style="margin-bottom: 20px;">
                 <h2 style="font-size: 1.3rem;">Choose Your Access Method</h2>
                 <p style="font-size: 1rem;">Access our Capture The Flag challenges using one of three methods. Use an SSH key for local access, create a password to SSH onto our platform, or access the terminal online directly from this page.</p>
-                <p style="font-size: 2rem;">EMAIL@UOREGON.EDU</p>
+                <p style="font-size: 2rem;">{{ user.email }}</p>
             </div>
 
             <div class="options-wrapper">
@@ -69,8 +69,14 @@
             <div class="option option-large">
                 <h3 style="margin-bottom: 10px;color: #ff9800;">Option 3: Access Web Terminal</h3>
                 <p style="margin-bottom: 15px;">Use the web terminal directly from this page. Click the button below to start your session and explore the challenges.</p>
-                <button class="terminal-btn" onclick="accessTerminal()" style="width: 50%; padding: 10px; font-size: 1rem; background-color: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer;">Access Web Terminal</button>
-            </div>
+                
+                <button 
+                    class="terminal-btn" 
+                    onclick="location.href='/terminal'" 
+                    style="width: 50%; padding: 10px; font-size: 1rem; background-color: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                    Access Web Terminal
+                </button>
+                        </div>
         </div>
     </div>
     <!-- Matrix Animation Script -->

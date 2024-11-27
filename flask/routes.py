@@ -142,15 +142,22 @@ def callback():
 @app.route("/")
 @flask_login.login_required
 def index():
-    return render_template("ssh_entry.html")
+    return render_template("ssh_entry.html", user=current_user)
 
 
 @app.route("/logout")
 @flask_login.login_required
 def logout():
     flask_login.logout_user()
-    return "Logged Out"
+    return render_template("landing.html")
 
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+@app.errorhandler(403)
+def forbidden(e):
+    return render_template('403.html'), 403
 
 @app.route("/whoami")
 @flask_login.login_required
@@ -162,9 +169,9 @@ def whoami():
 def landing():
     return render_template("landing.html")
 
-#@app.route("/home")
-#def home():
-#    return render_template("home.html")
+@app.route("/home")
+def home():
+    return render_template("home.html")
 
 
 @app.route("/terminal")
