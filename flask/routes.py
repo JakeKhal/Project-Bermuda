@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import argparse
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, join_room
 import flask
@@ -277,64 +276,39 @@ def connect(auth):
     if terminal_session != None:
         alive_child = check_pid(terminal_session.pid)
         open_fd = is_fd_open(terminal_session.fd)
-        new_session_needed = False
 
         if alive_child:
             os.kill(terminal_session.pid, 15)
-            new_session_needed = True
 
         if open_fd:
             os.close(terminal_session.fd)
-            new_session_needed = True
 
-        if new_session_needed:
-            subprocess.run(
-                ["/usr/bin/podman", "rm", "--force", current_user.container_name]
-            )
-            db.session.delete(terminal_session)
-            db.session.commit()
-            terminal_session = Terminal_Session(user_id=user_id)
-    else:
-        terminal_session = Terminal_Session(user_id=user_id)
+        subprocess.run(
+            ["/usr/bin/podman", "rm", "--time", "1", "--force", current_user.container_name]
+        )
+        db.session.delete(terminal_session)
+        db.session.commit()
 
-    process = subprocess.Popen(
-        [
-            "/usr/bin/podman",
-            "ps",
-            "--filter",
-            f"name={current_user.container_name}",
-            "--format",
-            "{{.Names}}",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-    )
-    stdout, stderr = process.communicate()
+    terminal_session = Terminal_Session(user_id=user_id)
 
-    print("stdot", stdout)
     (child_pid, fd) = pty.fork()
     if child_pid == 0:
         # this is the child process fork.
         # anything printed here will show up in the pty, including the output
         # of this subprocess
-        if stdout.strip():  # If the output is not empty, container exists
-            print("You already have a terminal session open!")
-            return
-        else:
-            subprocess.run(
-                [
-                    "/usr/bin/podman",
-                    "run",
-                    "--rm",
-                    "-it",
-                    "--replace",
-                    "--name",
-                    current_user.container_name,
-                    "localhost/kali-image:latest",
-                ]
-            )
-            return
+        subprocess.run(
+            [
+                "/usr/bin/podman",
+                "run",
+                "--rm",
+                "-it",
+                "--replace",
+                "--name",
+                current_user.container_name,
+                "localhost/kali-image:latest",
+            ]
+        )
+        return
     else:
         # this is the parent process fork.
         # store child fd and pid
