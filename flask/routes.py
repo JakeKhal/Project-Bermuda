@@ -25,6 +25,7 @@ from sqlalchemy.orm import DeclarativeBase
 from db import *
 from config import *
 from utils import *
+import sqlalchemy
 
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
@@ -188,17 +189,24 @@ def manage_challenges():
         flag = data.get("flag")
 
         if not challenge_id or not flag:
+            print("Missing challenge_id or flag")
             return jsonify({"status": "err", "message": "Missing challenge_id or flag"})
 
         # Validate the challenge ID
         if challenge_id not in challenges:
+            print(f"Invalid challenge ID: {challenge_id}")
             return jsonify({"status": "err", "message": "Invalid challenge ID"})
 
+        # Debugging: Print the received flag and the expected flag
+        print(f"Received flag for challenge {challenge_id}: '{flag}'")
+        print(f"Expected flag for challenge {challenge_id}: '{challenges[challenge_id]['flag']}'")
+
         # Check if the flag is correct
-        if challenges[challenge_id]["flag"] == flag:
+        if challenges[challenge_id]["flag"].strip() == flag.strip():
             # Check if the user has already solved the challenge
             existing_solve = Challenge_Solve.query.filter_by(user_id=current_user.id, challenge_id=challenge_id).first()
             if existing_solve:
+                print(f"Challenge {challenge_id} already solved by user {current_user.id}")
                 return jsonify({"status": "err", "message": "Challenge already solved"})
 
             # Mark the challenge as solved
@@ -207,10 +215,16 @@ def manage_challenges():
                 user_id=current_user.id
             )
             db.session.add(new_solve)
-            db.session.commit()
-
-            return jsonify({"status": "ok", "message": "Challenge solved successfully!"})
+            try:
+                db.session.commit()
+                print(f"Challenge {challenge_id} solved by user {current_user.id}")
+                return jsonify({"status": "ok", "message": "Challenge solved successfully!"})
+            except sqlalchemy.exc.IntegrityError as e:
+                db.session.rollback()
+                print(f"IntegrityError: {e}")
+                return jsonify({"status": "err", "message": "Database error: Challenge already solved"})
         else:
+            print(f"Incorrect flag for challenge {challenge_id}")
             return jsonify({"status": "err", "message": "Incorrect flag"})
 
 
