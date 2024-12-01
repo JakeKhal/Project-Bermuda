@@ -18,20 +18,13 @@
             justify-content: center;
         }
 
-        .matrix-content {
-            margin: 50px 0;
-            position: relative; /* Ensure it is above the matrix background */
-            z-index: 1001; /* Higher than the matrix canvas */
-        }
-
-        /* Container settings */
         .ssh-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: 95vw; /* Allow the container to use most of the viewport width */
-            max-width: 1400px; /* Set a larger max-width */
-            padding: 20px; /* Reduce padding to fit more items */
+            width: 95vw;
+            max-width: 1400px;
+            padding: 20px;
             background: rgba(34, 34, 34, 0.97);
             border-radius: 10px;
             text-align: center;
@@ -68,53 +61,66 @@
             <p>Select a challenge to test and expand your cybersecurity skills. Submit the correct flag to mark the challenge as completed.</p>
         </div>
         
-        <!-- Scrollable Challenge Grid Container -->
         <div class="challenge-grid-container">
             <div class="challenge-grid" id="challengeGrid">
-                <!-- Challenges will be injected here by JavaScript -->
+                <!-- Challenges will be dynamically injected -->
             </div>
         </div>
     </div>
 
+    <div class="ctf-info-modal" id="ctfInfoModal">
+        <div class="modal-content">
+            <span class="close-button" onclick="toggleCTFInfo()">&times;</span>
+            <h3 id="modalTitle">CTF Title</h3>
+            <p id="modalDescription">CTF Description</p>
+        </div>
+    </div>
+
     <script>
-        // Fetch and display challenges from JSON
+
+        // Challenge Card Injection and Info Modal
         fetch('challenges')
             .then(response => response.json())
             .then(challenges => {
                 const challengeGrid = document.getElementById('challengeGrid');
-                
+
                 challenges.forEach((challenge, index) => {
-                    // Create challenge card
                     const card = document.createElement('div');
                     card.className = 'challenge-card';
 
-                    // Title
+                    const header = document.createElement('div');
+                    header.className = 'card-header';
+
                     const title = document.createElement('div');
                     title.className = 'challenge-title';
                     title.textContent = challenge.title;
-                    card.appendChild(title);
 
-                    // Summary
+                    const infoIcon = document.createElement('i');
+                    infoIcon.className = 'info-icon';
+                    infoIcon.textContent = 'ℹ';
+                    infoIcon.onclick = () => toggleCTFInfo(challenge.title, challenge.description);
+
+                    header.appendChild(title);
+                    header.appendChild(infoIcon);
+                    card.appendChild(header);
+
                     const summary = document.createElement('div');
                     summary.className = 'challenge-summary';
                     summary.textContent = challenge.summary;
                     card.appendChild(summary);
 
-                    // Status
                     const status = document.createElement('div');
                     status.className = 'status ' + (challenge.completed ? 'completed' : 'not-completed');
                     status.textContent = challenge.completed ? 'Completed' : 'Not Completed';
                     card.appendChild(status);
 
-                    // Flag form
                     const form = document.createElement('div');
                     form.className = 'flag-form';
-                    
+
                     const input = document.createElement('input');
                     input.type = 'text';
                     input.placeholder = 'Enter flag here';
                     input.className = 'flag-input';
-                    input.id = `flag-input-${index}`;
                     form.appendChild(input);
 
                     const button = document.createElement('button');
@@ -132,16 +138,21 @@
                         }
                     };
                     form.appendChild(button);
-
                     card.appendChild(form);
 
-                    // Append card to grid
                     challengeGrid.appendChild(card);
                 });
-            })
-            .catch(error => console.error('Error loading challenges:', error));
+            });
 
-        // Check if all challenges are completed and trigger the Thanos rain and confetti
+        function toggleCTFInfo(title = '', description = '') {
+            const modal = document.getElementById('ctfInfoModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalDescription = document.getElementById('modalDescription');
+            modalTitle.textContent = title;
+            modalDescription.textContent = description;
+            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+        }
+
         function checkAllChallengesCompleted() {
             const statuses = document.querySelectorAll('.status');
             const allCompleted = Array.from(statuses).every(status => status.classList.contains('completed'));
@@ -152,9 +163,8 @@
             }
         }
 
-        // Function to create Thanos rain effect
         function triggerThanosRain() {
-            const thanosRainDuration = 30000; // 30 seconds
+            const thanosRainDuration = 30000;
             const thanosImage = 'assets/thanos.png';
 
             function createThanosElement() {
@@ -163,25 +173,17 @@
                 thanos.className = 'thanos-rain';
                 thanos.style.left = Math.random() * window.innerWidth + 'px';
                 document.body.appendChild(thanos);
-
-                // Remove Thanos image after animation completes
-                setTimeout(() => {
-                    thanos.remove();
-                }, 5000);
+                setTimeout(() => thanos.remove(), 5000);
             }
 
-            // Create Thanos rain effect every 200ms for 30 seconds
             const interval = setInterval(createThanosElement, 200);
             setTimeout(() => clearInterval(interval), thanosRainDuration);
         }
 
-        // Function to trigger confetti animation
         function triggerConfetti() {
             const canvas = document.getElementById('confettiCanvas');
             const ctx = canvas.getContext('2d');
             const confettiParticles = [];
-
-            // Adjust confetti particle attributes
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
@@ -204,7 +206,6 @@
                     particle.y += particle.speedY;
                     particle.x += particle.speedX;
 
-                    // Reset confetti position when it falls off screen
                     if (particle.y > canvas.height) {
                         particle.y = -particle.size;
                         particle.x = Math.random() * canvas.width;
@@ -212,14 +213,16 @@
                 });
             }
 
-            // Start the confetti animation
             const confettiInterval = setInterval(drawConfetti, 20);
-            
-            // Stop the confetti animation and clear the canvas after 30 seconds
             setTimeout(() => {
-                clearInterval(confettiInterval); // Stop the animation loop
-                ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the confetti from the canvas
-            }, 30000); // Run confetti for 30 seconds
+                clearInterval(confettiInterval);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }, 30000);
+        }
+
+        function toggleDropdown() {
+            const dropdown = document.getElementById('dropdownMenu');
+            dropdown.style.display = dropdown.style.display === 'none' || dropdown.style.display === '' ? 'flex' : 'none';
         }
 
         var q = document.getElementById('matrixCanvas'); // Ensure this ID matches your canvas element
@@ -245,11 +248,6 @@
             });
         };
         setInterval(draw, 60);
-
-        function toggleDropdown() {
-            const dropdown = document.getElementById('dropdownMenu');
-            dropdown.style.display = dropdown.style.display === 'none' || dropdown.style.display === '' ? 'flex' : 'none';
-        }
 
     </script>
 </body>
