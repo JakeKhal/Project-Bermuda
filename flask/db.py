@@ -41,7 +41,7 @@ class Challenge_Solve(db.Model):
     __tablename__ = "challenge_solves"
     id: Mapped[int] = mapped_column(primary_key=True)
     challenge_id: Mapped[str] = mapped_column()
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped[User] = relationship("User", backref="challenge_solved")
 
 

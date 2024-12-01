@@ -77,7 +77,6 @@
     </div>
 
     <script>
-
         // Challenge Card Injection and Info Modal
         fetch('challenges')
             .then(response => response.json())
@@ -128,14 +127,30 @@
                     button.className = 'flag-btn';
                     button.onclick = () => {
                         const userFlag = input.value.trim();
-                        if (userFlag === challenge.flag) {
-                            status.textContent = 'Completed';
-                            status.classList.remove('not-completed');
-                            status.classList.add('completed');
-                            checkAllChallengesCompleted();
-                        } else {
-                            alert('Incorrect flag. Try again!');
-                        }
+                        console.log(`Submitting flag for challenge ${challenge.id}: ${userFlag}`);
+                        // Send the flag to the server for validation
+                        fetch('/challenges', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                challenge_id: challenge.id,
+                                flag: userFlag
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(result => {
+                            console.log(`Server response for challenge ${challenge.id}:`, result);
+                            if (result.status === 'ok') {
+                                status.textContent = 'Completed';
+                                status.classList.remove('not-completed');
+                                status.classList.add('completed');
+                                checkAllChallengesCompleted();
+                            } else {
+                                alert(result.message);
+                            }
+                        });
                     };
                     form.appendChild(button);
                     card.appendChild(form);
