@@ -43,7 +43,10 @@ socketio = SocketIO(app)
 login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "/landing"
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
+if config["run_mode"] == "dev":
+    app.config["SQLALCHEMY_DATABASE_URI"] = credentials["DEV_DATABASE_STRING"]
+else:
+    app.config["SQLALCHEMY_DATABASE_URI"] = credentials["PROD_DATABASE_STRING"]
 db.init_app(app)
 
 # MSAL ConfidentialClientApplication
@@ -389,8 +392,10 @@ def connect(auth):
 
 
 def main():
-    socketio.run(app, debug=True, port=5000, host="0.0.0.0")
-
+    if config["run_mode"] == "dev":
+        socketio.run(app, debug=True, port=5000, host="0.0.0.0")
+    else:
+        socketio.run(app, debug=False, port=5000, host="0.0.0.0")
 
 if __name__ == "__main__":
     main()

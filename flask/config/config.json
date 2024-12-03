@@ -1,3 +1,4 @@
 {
-  "image_name": "localhost/kali-image:latest"
+  "image_name": "localhost/kali-image:latest",
+  "run_mode": "dev"
 }
