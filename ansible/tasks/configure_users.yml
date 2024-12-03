@@ -9,7 +9,7 @@
     - sswanson
     - fenix
     - jkhal
-  become: yes
+  become: true
 
 - name: Add ssh keys for each user
   ansible.posix.authorized_key:
@@ -25,6 +25,11 @@
       key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCemZoCmSM+LWI/4qOwS/cRP4YTXPFgTPcv6bvf309iS0eJCzhD9dO1h0I2oSa6l09y3OhRlsdnhi9wUg/FAk1xRHUtP5GSvlryBujVE5dYQtAF/uETpexCB16czyhzdaZJoQ9GTSluzQ03i1HwG0o3pcZEszZUPC0vTRBm1vYnzPLF87gWNRB4l9l9bnNOh6wm3ULrqsiMihyVX0dHPEhFpRWHc+/X93KvaoCkbWcnnI3//sZ8j7BK8duBq2SdyCzqI/D0bUO2VIZC1TLTrW+97LubdOlJPmwnCfSc8sleDkI6h2FJpiyXhajqg1rQzIozPt5CvQGJZE0ds/4oNO5dmn2har8ycRI47aMqCBBZ/3fBoHo42SfnvmWE+vmV8fiZwX0xdrD6uvgnrzwA+71X+F4iX9EoneosvBpvHr7ZHMN6x749ehjBhUENBoOaCzwZSc/fX7+u3XQ3pwEZUBXW6t+8qVF9fJhZRp/+ner+FFlvsbhGa9j2uZEsf1EjWNs= aiapara@pop-os"
     - name: jkhal
       key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPm2Ypvgm5nFgEsLlMSpITQnEsBBMtWtnQmfr4wvGzoe jkhal@dyn-10-108-27-122.wless.uoregon.edu"
-  become: yes
+  become: true
 
-      
+- name: Add unpriveleged user to run server
+  ansible.builtin.user:
+    name: podman
+    shell: /usr/bin/bash
+    create_home: yes
+    state: present

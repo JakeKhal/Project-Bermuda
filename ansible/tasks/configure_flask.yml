@@ -7,69 +7,23 @@
     name: ['python3', 'python3-pip']
     state: present
 
-- name: Install Flask
-  pip:
-    name: flask
-    state: latest
-
-- name: Install other dependencies
-  pip:
-    name:
-      - flask-socketio
-      - eventlet
-    state: latest
-
-- name: Install additional requirements
-  pip:
-    name:
-      - bidict==0.21.2  # via python-socketio
-      - click==8.0.1  # via flask
-      - flask==2.0.1  # via flask-socketio
-      - flask-socketio==5.1.1  # via -r requirements.in
-      - itsdangerous==2.0.1  # via flask
-      - jinja2==3.0.1  # via flask
-      - markupsafe==2.0.1  # via jinja2
-      - python-engineio==4.2.1  # via python-socketio
-      - python-socketio==5.4.0  # via flask-socketio
-      - werkzeug==2.0.1  # via flask
-    state: latest
-
-#- name: Copy Flask app to server
-#  copy:
-#    src: /path/to/your/flask/app.py
-#    dest: /path/to/destination/app.py
-
-- name: Install pyxtermjs
-  pip:
-    name: pyxtermjs
-    state: latest
-
-- name: Create log file
-  file:
-    path: ../flask/logfile.log
-    state: touch
+- name: Copy the Bermuda service file
+  copy:
+    src: files/bermuda.service
+    dest: /etc/systemd/system/bermuda.service
+    owner: root
+    group: root
     mode: '0644'
 
-- name: Debug Flask app info
-  debug:
-    msg:
-      - "Flask app is running in development mode"
-      - "Check the log file for output in flask/log_file.log"
-      - "If running locally, access the app at http://localhost:5000"
+- name: Reload systemd daemon
+  command: systemctl daemon-reload
 
-- name: Run Flask app
-  shell: python3 ../flask/bermuda.py > ../flask/log_file.log
-  environment:
-    FLASK_ENV: development
-  async: 3600
-  poll: 0
-  #when: flask_proxy_enabled != true  # Skip this if Caddy is acting as a reverse proxy
+- name: Enable the Bermuda service
+  systemd:
+    name: bermuda.service
+    enabled: yes
 
-
-
-#- name: Run Flask app
-#  command: python3 ../flask/bermuda.py
-#  environment:
-#    FLASK_ENV: development
-  #async: 3600
-  #poll: 0
+- name: Start the Bermuda service
+  systemd:
+    name: bermuda.service
+    state: started

@@ -1,0 +1,13 @@
+[Unit]
+Description=Run Bermuda
+After=network.target
+
+[Service]
+Type=simple
+User=podman
+WorkingDirectory=/home/podman/Project-Bermuda/flask
+ExecStart=/home/podman/Project-Bermuda/flask/venv/bin/python /home/podman/Project-Bermuda/flask/routes.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
