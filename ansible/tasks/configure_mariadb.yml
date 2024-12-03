@@ -1,7 +1,7 @@
 - name: Install the latest version of MariaDB
   ansible.builtin.package:
     name:
-      - mariadb
+      - mariadb-server
     state: latest
   become: true
 
