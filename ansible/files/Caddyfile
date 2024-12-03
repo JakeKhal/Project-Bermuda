@@ -1,4 +1,8 @@
-terminal-development.uosec.org {
+http://terminal-development.uosec.org {
+    redir https://{host}{uri}
+}
+
+https://terminal-development.uosec.org {
     reverse_proxy :5000
     tls uosecurityclub@uoregon.edu
 }
