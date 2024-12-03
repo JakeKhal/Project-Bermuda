@@ -8,7 +8,7 @@
     creates: "/home/podman/Project-Bermuda/flask/venv/bin/activate"
 
 - name: Install dependencies from requirements.txt
-  command: "/home/podman/Project-Bermuda/flask/venv/bin/pip install -r requirements.txt"
+  command: "/home/podman/Project-Bermuda/flask/venv/bin/pip install -r /home/podman/Project-Bermuda/flask/requirements.txt"
 
 - name: Copy the Bermuda service file
   copy:
