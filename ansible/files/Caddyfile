@@ -1,3 +1,4 @@
-terminal-development.uosec.org
-
-reverse_proxy :5000
+terminal-development.uosec.org {
+    reverse_proxy :5000
+    tls uosecurityclub@uoregon.edu
+}

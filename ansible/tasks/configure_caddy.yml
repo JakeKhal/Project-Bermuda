@@ -18,3 +18,9 @@
     owner: caddy
     group: caddy
     mode: '0644'
+  
+- name: Ensure Caddy service is started and enabled
+  ansible.builtin.systemd:
+    name: caddy
+    state: started
+    enabled: yes
