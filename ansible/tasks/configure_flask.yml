@@ -1,3 +1,17 @@
+- name: Open HTTP and HTTPS ports on firewall
+  ansible.builtin.firewalld:
+    zone: public
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+  loop:
+    - "80/tcp"
+    - "443/tcp"
+
+- name: Reload firewall to apply changes
+  ansible.builtin.firewalld:
+    state: reloaded
+
 - name: Install Python and pip
   package:
     name: ['python3', 'python3-pip', 'python3-devel']
