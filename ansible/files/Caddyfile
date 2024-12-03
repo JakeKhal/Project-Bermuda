@@ -4,7 +4,5 @@ http://terminal-development.uosec.org {
 
 https://terminal-development.uosec.org {
     reverse_proxy :5000
-    tls sswanso5@uoregon.edu {
-        ca https://acme-v02.api.letsencrypt.org/directory
-    }
+    tls sswanso5@uoregon.edu
 }
