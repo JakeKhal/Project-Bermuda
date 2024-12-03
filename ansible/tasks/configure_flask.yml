@@ -6,7 +6,7 @@
   git:
     repo: "/opt/sourcecode"
     dest: "/home/podman/Project-Bermuda"
-    version: master  # Or specify a branch or tag if needed
+    version: main  # Or specify a branch or tag if needed
     force: yes  # Ensures the repository is cloned even if the directory exists
     update: yes  # Pulls changes if the repository already exists
   become_user: podman
