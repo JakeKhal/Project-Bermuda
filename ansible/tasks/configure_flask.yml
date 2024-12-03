@@ -8,21 +8,22 @@
     - "80/tcp"
     - "443/tcp"
 
-- name: Reload firewall to apply changes
-  ansible.builtin.firewalld:
+- name: Always reload firewalld
+  ansible.builtin.service:
+    name: firewalld
     state: reloaded
 
 - name: Install Python and pip
   package:
-    name: ['python3', 'python3-pip', 'python3-devel']
+    name: ["python3", "python3-pip", "python3-devel"]
     state: present
 - name: Clone the repository
   git:
     repo: "/opt/sourcecode"
     dest: "/home/podman/Project-Bermuda"
-    version: main  # Or specify a branch or tag if needed
-    force: yes  # Ensures the repository is cloned even if the directory exists
-    update: yes  # Pulls changes if the repository already exists
+    version: main # Or specify a branch or tag if needed
+    force: yes # Ensures the repository is cloned even if the directory exists
+    update: yes # Pulls changes if the repository already exists
   become_user: podman
 
 - name: copy credentials file
@@ -31,7 +32,7 @@
     dest: /home/podman/Project-Bermuda/flask/config/credentials.json
 
 - name: Create the virtual environment
-  command: 
+  command:
     cmd: python3 -m venv /home/podman/Project-Bermuda/flask/venv
     creates: "/home/podman/Project-Bermuda/flask/venv/bin/activate"
 
@@ -44,7 +45,7 @@
     dest: /etc/systemd/system/bermuda.service
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
 
 - name: Reload systemd daemon
   command: systemctl daemon-reload
