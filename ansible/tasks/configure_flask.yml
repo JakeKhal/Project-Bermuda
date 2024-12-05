@@ -25,6 +25,7 @@
     force: yes # Ensures the repository is cloned even if the directory exists
     update: yes # Pulls changes if the repository already exists
   become_user: podman
+  become: true
 
 - name: copy credentials file
   copy:
