@@ -17,6 +17,13 @@
     name: ["python3", "python3-pip", "python3-devel"]
     state: present
 
+- name: Update git settings
+  copy:
+    src: ../files/podman_gitconfig
+    dest: /home/podman/.gitconfig
+    owner: podman
+    group: podman
+
 - name: Clone the repository
   git:
     repo: "/opt/sourcecode"
