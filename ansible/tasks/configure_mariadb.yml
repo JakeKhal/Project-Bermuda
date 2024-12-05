@@ -29,11 +29,24 @@
     enabled: yes
   become: true
 
+- name: Ensure the 'bermuda' database exists
+  community.mysql.mysql_db:
+    name: bermuda
+    state: present
+  become: true
+
 - name: Ensure MariaDB user is present with the correct password
   community.mysql.mysql_user:
     name: "bermuda"
-    password: "bermuda_test"
-    host: "%"
-    priv: "*.*:ALL"
+    password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          37376265656338353235343865626335626337316566363065316566623937626236383231303562
+          3932626664393764616139356432353466356638653536310a646266363761396533383335373164
+          38646635353636666466626534643533326239386333643636376539356664376164383431376339
+          3536316639663762370a356130333436376631303466646630346635346464313133376635643336
+          32346235663233626636343530656633313634643764663531356366356161353533313639353336
+          3031396538323131356436303966363138353364343635633833
+    host: "localhost"
+    priv: "bermuda.*:ALL"
     state: present
   become: true
