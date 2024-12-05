@@ -8,6 +8,10 @@
     - name: Configure MariaDB
       ansible.builtin.include_tasks:
         file: tasks/configure_mariadb.yml
+    
+    - name: Build all containers
+      ansible.builtin.include_tanks:
+        file: tasks/configure_podman.yml
 
     - name: Configure Flask
       ansible.builtin.include_tasks:

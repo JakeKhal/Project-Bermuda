@@ -1,0 +1,21 @@
+- name: Install podman
+  package:
+    name: podman
+    state: present
+- name: Find all directories in the container path
+  find:
+    path: ../../containers
+    file_type: directory
+    depth: 1
+  register: container_dirs
+
+- name: Build containers using Podman
+  containers.podman.podman_image:
+    name: "{{ item.path | basename }}"
+    path: "{{ item.path }}"
+    state: build
+  with_items: "{{ container_dirs.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  become: true
+  become_user: podman
