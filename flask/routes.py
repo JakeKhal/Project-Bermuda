@@ -31,6 +31,7 @@ logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
 __version__ = "0.5.0.2"
 
+# Initialize Flask app
 app = Flask(
     __name__,
     template_folder="./templates",
@@ -38,11 +39,14 @@ app = Flask(
     static_url_path="",
 )
 
+# Configure app
 app.config["SECRET_KEY"] = credentials["FLASK_SECRET"]
 socketio = SocketIO(app)
 login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "/landing"
+
+# Set database URI based on run mode
 if config["run_mode"] == "dev":
     app.config["SQLALCHEMY_DATABASE_URI"] = credentials["DEV_DATABASE_STRING"]
 else:
@@ -56,6 +60,7 @@ app_msal = msal.ConfidentialClientApplication(
     client_credential=CLIENT_SECRET,  # Pass CLIENT_SECRET directly as a string
 )
 
+# Configure OAuth for Azure
 oauth = OAuth(app)
 azure = oauth.register(
     name="azure",
@@ -67,21 +72,22 @@ azure = oauth.register(
     redirect_uri=config['redirect_uri'],
 )
 
+# Create all database tables
 with app.app_context():
     db.create_all()
 
-
+# User loader for Flask-Login
 @login_manager.user_loader
 def user_loader(email):
     return User.query.filter_by(email=email).first()
 
-
+# Route for authentication
 @app.route("/authenticate")
 def login():
     # Redirect to Azure AD authorization endpoint
     return azure.authorize_redirect(redirect_uri=config['redirect_uri'])
 
-
+# Callback route for Azure AD
 @app.route("/callback")
 def callback():
     # Get the authorization code from the query parameters
@@ -125,47 +131,47 @@ def callback():
 
     return f"Failed to acquire token: {result.get('error_description')}"
 
-
+# Index route
 @app.route("/")
 @flask_login.login_required
 def index():
     return render_template("ssh_entry.html", user=current_user)
 
-
+# Logout route
 @app.route("/logout")
 @flask_login.login_required
 def logout():
     flask_login.logout_user()
     return render_template("landing.html")
 
-
+# Error handler for 404
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template("404.html"), 404
 
-
+# Error handler for 403
 @app.errorhandler(403)
 def forbidden(e):
     return render_template("403.html"), 403
 
-
+# Route to get current user ID
 @app.route("/whoami")
 @flask_login.login_required
 def whoami():
     return str(current_user.get_id())
 
-
+# Landing page route
 @app.route("/landing")
 def landing():
     return render_template("landing.html")
 
-
+# Home page route
 @app.route("/home")
 @flask_login.login_required
 def home():
     return render_template("home.html")
 
-
+# Route to manage challenges
 @app.route("/challenges", methods=["GET", "POST"])
 @flask_login.login_required
 def manage_challenges():
@@ -230,19 +236,19 @@ def manage_challenges():
             print(f"Incorrect flag for challenge {challenge_id}")
             return jsonify({"status": "err", "message": "Incorrect flag"})
 
-
+# Terminal route
 @app.route("/terminal")
 @flask_login.login_required
 def terminal():
     return render_template("terminal.html")
 
-
+# Function to set terminal window size
 def set_winsize(fd, row, col, xpix=0, ypix=0):
     logging.debug("setting window size with termios")
     winsize = struct.pack("HHHH", row, col, xpix, ypix)
     fcntl.ioctl(fd, termios.TIOCSWINSZ, winsize)
 
-
+# Function to read and forward PTY output
 def read_and_forward_pty_output(user_id):
     with app.app_context():
         max_read_bytes = 1024 * 20
@@ -284,7 +290,7 @@ def read_and_forward_pty_output(user_id):
                 db.session.delete(terminal_session)
                 db.session.commit()
 
-
+# SocketIO event handler for PTY input
 @socketio.on("pty-input", namespace="/pty")
 def pty_input(data):
     """write to the child pty. The pty sees this as if you are typing in a real
@@ -301,7 +307,7 @@ def pty_input(data):
         logging.debug("received input from browser: %s" % data["input"])
         os.write(terminal_session.fd, data["input"].encode())
 
-
+# SocketIO event handler for terminal resize
 @socketio.on("resize", namespace="/pty")
 def resize(data):
     if not current_user.is_authenticated:
@@ -317,7 +323,7 @@ def resize(data):
         logging.debug(f"Resizing window to {data['rows']}x{data['cols']}")
         set_winsize(terminal_session.fd, data["rows"], data["cols"])
 
-
+# SocketIO event handler for client connection
 @socketio.on("connect", namespace="/pty")
 def connect(auth):
     """new client connected"""
@@ -390,7 +396,7 @@ def connect(auth):
         logging.info("child pid is " + str(child_pid))
         logging.info("task started")
 
-
+# Main function to run the app
 def main():
     if config["run_mode"] == "dev":
         socketio.run(app, debug=True, port=5000, host="0.0.0.0")
