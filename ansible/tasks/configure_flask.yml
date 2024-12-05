@@ -53,10 +53,12 @@
     cmd: python3 -m venv /home/podman/Project-Bermuda/flask/venv
     creates: "/home/podman/Project-Bermuda/flask/venv/bin/activate"
   become_user: podman
+  become: true
 
 - name: Install dependencies frombe requirements.txt
   command: "/home/podman/Project-Bermuda/flask/venv/bin/pip install -r /home/podman/Project-Bermuda/flask/requirements.txt"
   become_user: podman
+  become: true
 
 - name: Copy the Bermuda service file
   copy:
