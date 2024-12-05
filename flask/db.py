@@ -11,13 +11,12 @@ class Base(DeclarativeBase):
 
 db = SQLAlchemy(model_class=Base)
 
-
 class User(db.Model):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    email: Mapped[str] = mapped_column(unique=True, nullable=False, length=255)
-    container_name: Mapped[str] = mapped_column(nullable=True, length=100)
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    container_name: Mapped[str] = mapped_column(String(100), nullable=True)
     active: Mapped[bool] = mapped_column(nullable=True)
     last_seen: Mapped[datetime] = mapped_column(server_default=func.now())
 
@@ -41,11 +40,9 @@ class User(db.Model):
 class Challenge_Solve(db.Model):
     __tablename__ = "challenge_solves"
     id: Mapped[int] = mapped_column(primary_key=True)
-    challenge_id: Mapped[str] = mapped_column(length=50)  # reasonable length for a challenge identifier
+    challenge_id: Mapped[str] = mapped_column(String(50))  # reasonable length for a challenge identifier
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped[User] = relationship("User", backref="challenge_solved")
-
-
 
 class Terminal_Session(db.Model):
     __tablename__ = "webterm_sessions"
