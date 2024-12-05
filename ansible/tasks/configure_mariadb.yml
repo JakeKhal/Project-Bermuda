@@ -27,3 +27,12 @@
     state: started
     enabled: yes
   become: true
+
+- name: Ensure MariaDB user is present with the correct password
+  community.mysql.mysql_user:
+    name: "bermuda"
+    password: "bermuda_test"
+    host: "%"
+    priv: "*.*:ALL"
+    state: present
+  become: true
