@@ -2,9 +2,10 @@
   package:
     name: podman
     state: present
+
 - name: Find all directories in the container path
   find:
-    path: ../../containers
+    path: /opt/sourcecode/containers/
     file_type: directory
     depth: 1
   register: container_dirs
