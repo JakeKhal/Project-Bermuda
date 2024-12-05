@@ -64,7 +64,7 @@ azure = oauth.register(
     authorize_url=f"{AUTHORITY}/oauth2/v2.0/authorize",
     access_token_url=f"{AUTHORITY}/oauth2/v2.0/token",
     client_kwargs={"scope": "openid profile email User.Read"},
-    redirect_uri=REDIRECT_URI,
+    redirect_uri=config['redirect_uri'],
 )
 
 with app.app_context():
@@ -79,7 +79,7 @@ def user_loader(email):
 @app.route("/authenticate")
 def login():
     # Redirect to Azure AD authorization endpoint
-    return azure.authorize_redirect(redirect_uri=REDIRECT_URI)
+    return azure.authorize_redirect(redirect_uri=config['redirect_uri'])
 
 
 @app.route("/callback")
@@ -91,7 +91,7 @@ def callback():
 
     # Exchange the authorization code for tokens using MSAL
     result = app_msal.acquire_token_by_authorization_code(
-        code, scopes=SCOPES, redirect_uri=REDIRECT_URI
+        code, scopes=SCOPES, redirect_uri=config['redirect_uri']
     )
 
     if "access_token" in result:

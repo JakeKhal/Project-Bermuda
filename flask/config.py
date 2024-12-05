@@ -10,7 +10,6 @@ CLIENT_SECRET = credentials["CLIENT_SECRET"]
 TENANT_ID = credentials["TENANT_ID"]
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
 SCOPES = ["User.Read"]
-REDIRECT_URI = "https://terminal-development.uosec.org/callback"
 
 with open("config/config.json", "r") as file:
     config = json.load(file)
