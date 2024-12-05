@@ -1,5 +1,5 @@
 {
   "image_name": "localhost/kali-image:latest",
-  "run_mode": "dev",
+  "run_mode": "prod",
   "redirect_uri": "https://terminal-development.uosec.org/callback"
 }
