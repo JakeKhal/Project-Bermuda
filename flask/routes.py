@@ -84,6 +84,8 @@ else:
 db.init_app(app)
 redis_client.init_app(app)
 
+redis_client.flushall()
+
 # MSAL ConfidentialClientApplication
 app_msal = msal.ConfidentialClientApplication(
     CLIENT_ID,
