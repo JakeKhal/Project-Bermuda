@@ -469,7 +469,7 @@ def connect(auth):
         # of this subprocess
         try:
 
-            if pid and fd:
+            if pid or fd:
                 pid, fd = int(pid), int(fd)
                 alive_child = check_pid(pid)
                 open_fd = is_fd_open(fd)
@@ -482,20 +482,20 @@ def connect(auth):
 
                 # Suppress output of subprocess.run
                 print("Cleaning up old session... Please wait")
-                subprocess.run(
-                    [
-                        "/usr/bin/podman",
-                        "rm",
-                        "--time",
-                        "1",
-                        "--force",
-                        current_user.container_name,
-                    ],
-                    stdout=subprocess.DEVNULL,  # Redirect standard output to /dev/null
-                    stderr=subprocess.DEVNULL,  # Redirect standard error to /dev/null
-                )
+            subprocess.run(
+                [
+                    "/usr/bin/podman",
+                    "rm",
+                    "--time",
+                    "1",
+                    "--force",
+                    current_user.container_name,
+                ],
+                stdout=subprocess.DEVNULL,  # Redirect standard output to /dev/null
+                stderr=subprocess.DEVNULL,  # Redirect standard error to /dev/null
+            )
 
-                redis_client.delete(f"session:{user_id}")
+            redis_client.delete(f"session:{user_id}")
 
 
             subprocess.run(
