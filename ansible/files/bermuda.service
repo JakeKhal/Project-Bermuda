@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 User=podman
 WorkingDirectory=/home/podman/Project-Bermuda/flask
-ExecStart=/home/podman/Project-Bermuda/flask/venv/bin/gunicorn -w 10 --threads 100 routes:app -b localhost:5000
+ExecStart=/home/podman/Project-Bermuda/flask/venv/bin/gunicorn -w 1 --threads 100 routes:app -b localhost:5000
 Restart=on-failure
 
 [Install]
