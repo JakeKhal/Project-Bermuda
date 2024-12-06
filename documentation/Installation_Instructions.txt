@@ -1,31 +1,99 @@
-System Requirements:
-Operating system - fedora family os
-ansible and git must be installed
+Project Bermuda: Programmer Documentation
 
-Required dependencies - Managed by Repository
+Overview
+Project Bermuda is a cybersecurity Capture The Flag (CTF) platform developed for the University of Oregon. It provides a free, safe, and controlled environment for students to practice ethical hacking skills. 
+The system includes a web interface, backend services, and SSH-based access to Linux environments tailored to individual users.
 
-Pre-Installation Checklist:
-Verify system requirements are installed
+System Components
+1. Web Interface
+- Technologies: HTML, CSS, JavaScript, Flask templates.
+Purpose: User-facing platform for authentication, configuration, challenge tracking, and terminal access.
+Pages:
+Landing Page: Welcomes users and directs them to the authentication process.
+Authentication Page: Uses Microsoft O365 OAuth for secure login.
+Configuration Page: Allows SSH key submissions and links to challenges and terminal.
+Challenges Page: Displays active challenges with flag submission functionality.
+Terminal Page: Provides terminal access to user-specific Linux environments.
+2. Backend Services
+Framework: Flask (Python).
+Purpose:
+Authenticate users via Microsoft OAuth.
+Manage user sessions, challenges, and container lifecycle through MariaDB and Podman APIs.
+Enforce secure access and track progress.
+3. SSH Server
+Language: Golang.
+Purpose:
+Manage SSH access to Linux environments.
+Authenticate users using stored credentials in MariaDB.
+Create and manage container sessions using Podman.
+Installation and Setup
 
-Step-by-Step Installation:
-Download/clone the repository https://github.com/Fenix-A-I/Project-Bermuda.
-Installing dependencies should be handled when cloning the Repository
+1. Authentication
+Flow:
+Users log in using their @uoregon.edu email.
+Microsoft OAuth validates credentials.
+User profile is created in the database, and SSH keys are securely stored.
+Endpoints: /auth, /login
+2. Challenges
+Functionality:
+Retrieve and display active challenges.
+Verify user-submitted flags.
+Update progress in the database.
+Endpoints: /challenges, /submit-flag
+3. Container Management
+Lifecycle:
+Check for an active container.
+Create a new container if none exists.
+Destroy container upon user logout.
+Tools: Podman API.
+Codebase Overview
 
-Deployment Instructions:
-1. Go to the config folder by running cd config in the terminal
-2. Run the command cp credentails.json.enc credentials.json
-3. Run ansible-vault decrypt credentials.json, and enter the vault password 
-4. Go to the flask folder by running cd ../flask in the command line 
-5. Run the command source venv/bin/activate to start your environment
-6. Run the command python3 ./routes.py to start a local host
-7. Go to http://localhost:5000 in the browser
+Main Files
+Web Interface:
+index.html: Landing and authentication page​
+.
+ssh_entry.html: Configuration and SSH key management​
+.
+home.html: Challenge dashboard​
+.
+terminal.html: Terminal page​
+.
+Backend:
+app.py: Main Flask application handling routes and database interactions.
+ssh_server.go: Golang SSH server for secure terminal access.
+Database:
+schema.sql: Schema for MariaDB database.
+Dynamic Models
 
-Testing Installation:
-Checking system logs for errors.
-Confirming functionality (e.g., accessing the web interface, submitting flags).
+Authentication Flow
+User logs in via Microsoft OAuth.
+Backend verifies credentials and stores user information.
+User is redirected to the configuration or challenges page.
+Challenge Progress
+User completes a challenge.
+Flag is submitted via the web interface.
+Backend verifies the flag and updates the user profile.
+Container Management
+User accesses the terminal page.
+Backend checks for an existing container.
+New container is created if necessary, and terminal access is granted.
+Troubleshooting
 
-Upgrades and Updates:
-Use branches in git and incrementally develop. 
-DO NOT PUSH TO MAIN
-Test code on localhost before merging branches 
-*optional* make backup of code
+Common Issues
+Authentication Errors:
+Ensure valid Microsoft O365 credentials.
+Check OAuth configurations in Flask settings.
+SSH Key Submission:
+Validate SSH key format (OpenSSH or RSA).
+Ensure database connectivity.
+Container Issues:
+Restart Podman if container creation fails.
+Verify Flask logs for API errors.
+Logging and Debugging
+Flask: Check flask.log.
+SSH Server: Check ssh_server.log.
+
+Future Enhancements
+Add real-time progress tracking for challenges.
+Implement advanced challenge metrics and leaderboards.
+Extend authentication to other university domains.
