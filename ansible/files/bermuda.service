@@ -5,6 +5,8 @@ After=network.target
 [Service]
 Type=simple
 User=podman
+PermissionsStartOnly=true
+RuntimeDirectoryMode=755
 WorkingDirectory=/home/podman/Project-Bermuda/flask
 ExecStart=/home/podman/Project-Bermuda/flask/venv/bin/python3 /home/podman/Project-Bermuda/flask/routes.py
 Restart=on-failure
