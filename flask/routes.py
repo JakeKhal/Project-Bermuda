@@ -31,6 +31,7 @@ import flask
 import pty
 import os
 import subprocess
+import selectors
 import select
 import termios
 import uuid
@@ -341,6 +342,69 @@ def terminal():
     """
     return render_template("terminal.html")
 
+
+def manage_fds():
+    """
+    Single-threaded loop to manage all FDs and Redis keys for PTY output.
+    Args:
+        redis_client: Redis client for managing user sessions.
+        socketio: SocketIO instance for emitting events.
+    """
+    sel = selectors.DefaultSelector()
+
+    # Function to refresh selectors and register new FDs
+    def refresh_selectors():
+        active_sessions = redis_client.keys("session:*")
+        current_fds = {key.fileobj for key in sel.get_map().values()}
+        new_fds = set()
+        for session_key in active_sessions:
+            try:
+                fd = int(redis_client.hget(session_key, "fd"))
+                if fd not in current_fds:
+                    sel.register(fd, selectors.EVENT_READ, data=session_key)
+                    new_fds.add(fd)
+            except (ValueError, TypeError, KeyError):
+                continue  # Skip if FD or session key is invalid
+        return new_fds
+
+    try:
+        while True:
+            # Refresh selector with new FDs
+            refresh_selectors()
+
+            # Process events
+            for key, mask in sel.select(timeout=1):
+                fd = key.fileobj
+                session_key = key.data.decode("utf-8")
+                print(session_key) 
+                try:
+                    output = os.read(fd, 1024 * 20).decode(errors="ignore")
+                    user_email = redis_client.hget(session_key, "email").decode("utf-8")
+                    socketio.emit(
+                        "pty-output",
+                        {"output": output},
+                        namespace="/pty",
+                        room=user_email,
+                    )
+                except OSError:
+                    # Clean up unregistered FDs
+                    sel.unregister(fd)
+                    redis_client.delete(session_key)
+
+            # Remove stale FDs and sessions
+            registered_fds = {key.fileobj for key in sel.get_map().values()}
+            active_sessions = redis_client.keys("session:*")
+            active_fds = {int(redis_client.hget(session, "fd")) for session in active_sessions if redis_client.hget(session, "fd")}
+
+            stale_fds = registered_fds - active_fds
+            for fd in stale_fds:
+                sel.unregister(fd)
+
+    except KeyboardInterrupt:
+        print("Stopping FD manager")
+    finally:
+        sel.close()
+
 # Function to set terminal window size
 def set_winsize(fd, row, col, xpix=0, ypix=0):
     """
@@ -355,46 +419,6 @@ def set_winsize(fd, row, col, xpix=0, ypix=0):
     logging.debug("Setting window size with termios")
     winsize = struct.pack("HHHH", row, col, xpix, ypix)
     fcntl.ioctl(fd, termios.TIOCSWINSZ, winsize)
-
-# Function to read and forward PTY output
-def read_and_forward_pty_output(user_id):
-    """
-    Read and forward PTY output to the client.
-    Args:
-        user_id (int): User ID.
-    """
-    max_read_bytes = 1024 * 20
-    while True:
-        try:
-            user_email = redis_client.hget(f"user:{user_id}", "email")
-            pid = redis_client.hget(f"session:{user_id}", "pid")
-            fd = redis_client.hget(f"session:{user_id}", "fd")
-            if not pid or not fd:
-                return
-            
-            pid, fd = int(pid), int(fd)
-            alive_child = check_pid(pid)
-            open_fd = is_fd_open(fd)
-
-            if not (alive_child and open_fd):
-                redis_client.delete(f"session:{user_id}")
-                return
-
-            socketio.sleep(0.01)
-            timeout_sec = 10
-            (data_ready, _, _) = select.select([fd], [], [], timeout_sec)
-            if data_ready:
-                output = os.read(fd, max_read_bytes).decode(errors="ignore")
-                print(f"forwarding data {output}, from fd {fd} to room {user_email}")
-                socketio.emit(
-                    "pty-output",
-                    {"output": output},
-                    namespace="/pty",
-                    room=user_email.decode("utf-8"),
-                )
-        except:
-            logging.info("Error forwarding data, closing session")
-            redis_client.delete(f"session:{user_id}")
 
 # SocketIO event handler for PTY input
 @socketio.on("pty-input", namespace="/pty")
@@ -448,10 +472,11 @@ def connect(auth):
         print("Rejected unauthenticated user")
         return
 
+
     logging.info("New client connected")
     join_room(current_user.email)
 
-    user_id = current_user.get_db_id()
+    user_id = current_user.container_name
     pid = redis_client.hget(f"session:{user_id}", "pid")
     fd = redis_client.hget(f"session:{user_id}", "fd")
 
@@ -477,7 +502,7 @@ def connect(auth):
             ]
         )
         redis_client.delete(f"session:{user_id}")
-
+    
     # Start new terminal session
     (child_pid, child_fd) = pty.fork()
     if child_pid == 0:
@@ -503,17 +528,18 @@ def connect(auth):
     else:
         redis_client.hmset(
             f"session:{user_id}",
-            {"pid": child_pid, "fd": child_fd, "container_name": current_user.container_name}
+            {"pid": child_pid, "fd": child_fd, "container_name": current_user.container_name, "email":current_user.email}
         )
         redis_client.hset(f"user:{user_id}", "email", current_user.email)
         set_winsize(child_fd, 50, 50)
-        socketio.start_background_task(
-            target=read_and_forward_pty_output, user_id=user_id
-        )
 
         logging.info("Child pid is " + str(child_pid))
         logging.info("Task started")
 
+    if not hasattr(app, "fd_manager"):
+        app.fd_manager = socketio.start_background_task(
+            target=manage_fds
+        )
 
 def check_pid(pid):
     try:
