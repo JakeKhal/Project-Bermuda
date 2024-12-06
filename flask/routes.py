@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, join_room
+from flask_redis import FlaskRedis
+from fakeredis import FakeRedis
 import flask
 import pty
 import os
@@ -49,9 +51,13 @@ login_manager.login_view = "/landing"
 # Set database URI based on run mode
 if config["run_mode"] == "dev":
     app.config["SQLALCHEMY_DATABASE_URI"] = credentials["DEV_DATABASE_STRING"]
+    redis_client = FlaskRedis.from_custom_provider(FakeRedis)
 else:
     app.config["SQLALCHEMY_DATABASE_URI"] = credentials["PROD_DATABASE_STRING"]
+    app.config['REDIS_URL'] = credentials["REDIS_STRING"]
+    redis_client = FlaskRedis()
 db.init_app(app)
+redis_client.init_app(app)
 
 # MSAL ConfidentialClientApplication
 app_msal = msal.ConfidentialClientApplication(
@@ -244,107 +250,99 @@ def terminal():
 
 # Function to set terminal window size
 def set_winsize(fd, row, col, xpix=0, ypix=0):
-    logging.debug("setting window size with termios")
+    logging.debug("Setting window size with termios")
     winsize = struct.pack("HHHH", row, col, xpix, ypix)
     fcntl.ioctl(fd, termios.TIOCSWINSZ, winsize)
 
 # Function to read and forward PTY output
 def read_and_forward_pty_output(user_id):
-    with app.app_context():
-        max_read_bytes = 1024 * 20
-        while True:
-            try:
-                user = User.query.get(user_id)
-                terminal_session = Terminal_Session.query.filter_by(
-                    user_id=user_id
-                ).first()
-                if terminal_session == None:
-                    return
-                alive_child = check_pid(terminal_session.pid)
-                open_fd = is_fd_open(terminal_session.fd)
+    max_read_bytes = 1024 * 20
+    while True:
+        try:
+            user_email = redis_client.hget(f"user:{user_id}", "email")
+            pid = redis_client.hget(f"session:{user_id}", "pid")
+            fd = redis_client.hget(f"session:{user_id}", "fd")
+            if not pid or not fd:
+                return
+            
+            pid, fd = int(pid), int(fd)
+            alive_child = check_pid(pid)
+            open_fd = is_fd_open(fd)
 
-                # Something happened to the session, bailing
-                if not (alive_child and open_fd):
-                    return
+            if not (alive_child and open_fd):
+                redis_client.delete(f"session:{user_id}")
+                return
 
-                socketio.sleep(0.01)
-                if terminal_session.fd:
-                    timeout_sec = 10
-                    (data_ready, _, _) = select.select(
-                        [terminal_session.fd], [], [], timeout_sec
-                    )
-                    if data_ready:
-                        output = os.read(terminal_session.fd, max_read_bytes).decode(
-                            errors="ignore"
-                        )
-                        socketio.emit(
-                            "pty-output",
-                            {"output": output},
-                            namespace="/pty",
-                            room=user.email,
-                        )
-                else:
-                    return
-            except:
-                logging.info("Error forwarding data, closing session")
-                db.session.delete(terminal_session)
-                db.session.commit()
+            socketio.sleep(0.01)
+            timeout_sec = 10
+            (data_ready, _, _) = select.select([fd], [], [], timeout_sec)
+            if data_ready:
+                output = os.read(fd, max_read_bytes).decode(errors="ignore")
+                print(f"forwarding data {output}, from fd {fd} to room {user_email}")
+                socketio.emit(
+                    "pty-output",
+                    {"output": output},
+                    namespace="/pty",
+                    room=user_email.decode("utf-8"),
+                )
+        except:
+            logging.info("Error forwarding data, closing session")
+            redis_client.delete(f"session:{user_id}")
 
 # SocketIO event handler for PTY input
 @socketio.on("pty-input", namespace="/pty")
 def pty_input(data):
-    """write to the child pty. The pty sees this as if you are typing in a real
-    terminal.
-    """
     if not current_user.is_authenticated:
-        print("rejected unauthenticated user")
+        print("Rejected unauthenticated user")
         return
+    
     user_id = current_user.get_db_id()
-    terminal_session = Terminal_Session.query.filter_by(user_id=user_id).first()
-    if terminal_session == None:
-        return
-    if terminal_session.fd:
-        logging.debug("received input from browser: %s" % data["input"])
-        os.write(terminal_session.fd, data["input"].encode())
+    fd = redis_client.hget(f"session:{user_id}", "fd")
+    
+    if fd:
+        fd = int(fd)
+        print("Received input from browser: %s" % data["input"])
+        os.write(fd, data["input"].encode())
 
 # SocketIO event handler for terminal resize
 @socketio.on("resize", namespace="/pty")
 def resize(data):
     if not current_user.is_authenticated:
-        print("rejected unauthenticated user")
+        print("Rejected unauthenticated user")
         return
 
     user_id = current_user.get_db_id()
-    terminal_session = Terminal_Session.query.filter_by(user_id=user_id).first()
-    if terminal_session == None:
-        return
+    fd = redis_client.hget(f"session:{user_id}", "fd")
 
-    if terminal_session.fd:
+    if fd:
+        fd = int(fd)
         logging.debug(f"Resizing window to {data['rows']}x{data['cols']}")
-        set_winsize(terminal_session.fd, data["rows"], data["cols"])
+        set_winsize(fd, data["rows"], data["cols"])
 
 # SocketIO event handler for client connection
 @socketio.on("connect", namespace="/pty")
 def connect(auth):
-    """new client connected"""
     if not current_user.is_authenticated:
-        print("rejected unauthenticated user")
+        print("Rejected unauthenticated user")
         return
 
-    logging.info("new client connected")
+    logging.info("New client connected")
     join_room(current_user.email)
 
     user_id = current_user.get_db_id()
-    terminal_session = Terminal_Session.query.filter_by(user_id=user_id).first()
-    if terminal_session != None:
-        alive_child = check_pid(terminal_session.pid)
-        open_fd = is_fd_open(terminal_session.fd)
+    pid = redis_client.hget(f"session:{user_id}", "pid")
+    fd = redis_client.hget(f"session:{user_id}", "fd")
+
+    if pid and fd:
+        pid, fd = int(pid), int(fd)
+        alive_child = check_pid(pid)
+        open_fd = is_fd_open(fd)
 
         if alive_child:
-            os.kill(terminal_session.pid, 15)
+            os.kill(pid, 15)
 
         if open_fd:
-            os.close(terminal_session.fd)
+            os.close(fd)
 
         subprocess.run(
             [
@@ -356,12 +354,10 @@ def connect(auth):
                 current_user.container_name,
             ]
         )
-        db.session.delete(terminal_session)
-        db.session.commit()
+        redis_client.delete(f"session:{user_id}")
 
-    terminal_session = Terminal_Session(user_id=user_id)
-
-    (child_pid, fd) = pty.fork()
+    # Start new terminal session
+    (child_pid, child_fd) = pty.fork()
     if child_pid == 0:
         # this is the child process fork.
         # anything printed here will show up in the pty, including the output
@@ -383,21 +379,34 @@ def connect(auth):
             pass
         return
     else:
-        # this is the parent process fork.
-        # store child fd and pid
-        terminal_session.fd = fd
-        terminal_session.pid = child_pid
-        db.session.add(terminal_session)
-        db.session.commit()
-        set_winsize(fd, 50, 50)
-        # logging/print statements must go after this because... I have no idea why
-        # but if they come before the background task never starts
+        redis_client.hmset(
+            f"session:{user_id}",
+            {"pid": child_pid, "fd": child_fd, "container_name": current_user.container_name}
+        )
+        redis_client.hset(f"user:{user_id}", "email", current_user.email)
+        set_winsize(child_fd, 50, 50)
         socketio.start_background_task(
             target=read_and_forward_pty_output, user_id=user_id
         )
 
-        logging.info("child pid is " + str(child_pid))
-        logging.info("task started")
+        logging.info("Child pid is " + str(child_pid))
+        logging.info("Task started")
+
+
+def check_pid(pid):
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
+def is_fd_open(fd):
+    try:
+        os.fstat(fd)
+        return True
+    except OSError:
+        return False
 
 # Main function to run the app
 def main():
@@ -405,6 +414,7 @@ def main():
         socketio.run(app, debug=True, port=5000, host="0.0.0.0")
     else:
         socketio.run(app, debug=False, port=5000, host="0.0.0.0")
+
 
 if __name__ == "__main__":
     main()

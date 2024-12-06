@@ -1,0 +1,27 @@
+- name: Install valkey (foss redis replacement)
+  package:
+    name: valkey.x86_64
+    state: present
+
+- name: Copy valkey config file
+  ansible.builtin.copy:
+    src: ../files/valkeyconf
+    dest: /etc/valkey/valkey.conf
+    owner: valkey
+    group: root
+    mode: '0640'
+  register: config_file_changed
+
+- name: Restart valkey if the config file changed
+  ansible.builtin.service:
+    name: valkey
+    state: restarted
+  become: true
+  when: config_file_changed is defined and config_file_changed.changed
+
+- name: Ensure valkey is running
+  ansible.builtin.service:
+    name: valkey
+    state: started
+    enabled: yes
+  become: true
