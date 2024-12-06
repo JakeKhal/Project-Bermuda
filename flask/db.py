@@ -3,6 +3,7 @@ from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase, relationship
 from sqlalchemy.sql import func
+from bcrypt import gensalt, hashpw, checkpw
 
 
 class Base(DeclarativeBase):
@@ -53,3 +54,22 @@ class Terminal_Session(db.Model):
 
     # Establish a relationship to the User model
     user: Mapped[User] = relationship("User", backref="terminal_sessions")
+
+class SSH_Cred(db.Model):
+    __tablename__ = "ssh_creds"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    ssh_key: Mapped[str] = mapped_column(String(255), nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
+
+    # Establish a relationship to the User model
+    user: Mapped[User] = relationship("User", backref="ssh_cred")
+
+    def set_password(self, password: str):
+        """Hash and store the password using bcrypt."""
+        salt = gensalt()
+        self.hashed_password = hashpw(password.encode("utf-8"), salt).decode("utf-8")
+
+    def check_password(self, password: str) -> bool:
+        """Verify the provided password matches the hashed password."""
+        return checkpw(password.encode("utf-8"), self.hashed_password.encode("utf-8"))
