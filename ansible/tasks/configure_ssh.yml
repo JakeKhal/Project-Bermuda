@@ -6,6 +6,11 @@
   loop:
     - "2222/tcp"
 
+- name: Always reload firewalld
+  ansible.builtin.service:
+    name: firewalld
+    state: reloaded
+
 - name: Install needed packages
   package:
     name: ["go", "gcc"]

@@ -8,7 +8,7 @@ User=podman
 PermissionsStartOnly=true
 RuntimeDirectoryMode=755
 WorkingDirectory=/home/podman/Project-Bermuda/flask
-ExecStart=/home/podman/Project-Bermuda/ssh/bermuda-ssh /home/podman/Project-Bermuda/flask/config/credentials.json /home/podman/Project-Bermuda/flask/config/config.json
+ExecStart=/home/podman/Project-Bermuda/ssh/bermuda-ssh -credentials /home/podman/Project-Bermuda/flask/config/credentials.json -config /home/podman/Project-Bermuda/flask/config/config.json
 Restart=on-failure
 
 [Install]
