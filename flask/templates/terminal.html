@@ -187,6 +187,10 @@ ch.js"></script>
           if (!proceed) {
             event.preventDefault(); // Prevent the default action if the user cancels
           }
+          if (proceed) {
+            const targetRoute = event.target.getAttribute('href');
+            window.location.href = targetRoute;
+          }
         });
       });
     }
