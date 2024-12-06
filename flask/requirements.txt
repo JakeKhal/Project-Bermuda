@@ -19,6 +19,7 @@ itsdangerous==2.2.0
 Jinja2==3.1.4
 MarkupSafe==3.0.2
 msal==1.31.1
+mysqlclient==2.2.6
 packaging==24.2
 podman==5.2.0
 pycparser==2.22
