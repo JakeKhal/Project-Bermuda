@@ -31,5 +31,7 @@
   ansible.builtin.user:
     name: podman
     shell: /usr/bin/bash
+    groups: valkey
+    append: yes
     create_home: yes
     state: present
