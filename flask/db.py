@@ -12,6 +12,7 @@ Modifications:
 - 2024-11-12: Added get_db_id, is_active, get_id, is_authenticated, and is_anonymous methods to User model
 - 2024-11-27: Connected challanges page to database
 - 2024-11-30: Fixed submit correction flag not functioning correctly with database
+- 2024-12-5: Added ssh credential model
 """
 
 # Import necessary libraries and modules

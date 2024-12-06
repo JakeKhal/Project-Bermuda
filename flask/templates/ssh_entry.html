@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CTF Access</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        html, body {
-            height: 100%; 
-            margin: 0; 
+        html,
+        body {
+            height: 100%;
+            margin: 0;
         }
 
         .ssh-container {
@@ -16,6 +18,7 @@
         }
     </style>
 </head>
+
 <body class="matrix-background">
     <!-- Matrix Canvas for Animated Background -->
     <canvas class="matrix-canvas" id="q"></canvas>
@@ -33,10 +36,12 @@
                 <a href="/home">Submit Flags</a>
                 <a href="/logout">Sign Out</a>
             </div>
-            <h1 class="title" style="text-align: center;">UOCSC - CTF Access</h1>
+            <h1 class="title" style="text-align: center;">UOSEC - CTF Access</h1>
             <div class="instructions-box" style="margin-bottom: 20px;">
                 <h2 style="font-size: 1.3rem;">Choose Your Access Method</h2>
-                <p style="font-size: 1rem;">Access our Capture The Flag challenges using one of three methods. Use an SSH key for local access, create a password to SSH onto our platform, or access the terminal online directly from this page.</p>
+                <p style="font-size: 1rem;">Access our Capture The Flag challenges using one of three methods. Use an
+                    SSH key for local access, create a password to SSH onto our platform, or access the terminal online
+                    directly from this page.</p>
                 <p style="font-size: 2rem;">{{ user.email }}</p>
             </div>
 
@@ -44,39 +49,59 @@
                 <!-- SSH Key Option -->
                 <div class="option">
                     <h3 style="margin-bottom: 10px;color: #ff9800;">Option 1: Submit SSH Key</h3>
-                    <p style="margin-bottom: 15px;">Submit your SSH key to access the challenges via your local machine's terminal. Ensure your SSH key is configured correctly.</p>
+                    <p style="margin-bottom: 15px;">Submit your SSH key to access the challenges via your local
+                        machine's terminal. Ensure your SSH key is configured correctly.</p>
                     <div class="input-group">
-                        <textarea id="ssh-key" placeholder="SSH Key" style="width: 100%; height: 80px; padding: 10px; font-size: 1rem; border-radius: 5px; border: 1px solid #444;"></textarea>
+                        <textarea id="ssh-key" placeholder="{{ pub_key }}"
+                            style="width: 100%; height: 80px; padding: 10px; font-size: 1rem; border-radius: 5px; border: 1px solid #444;"></textarea>
                     </div>
-                    <button class="submit-ssh-btn" onclick="submitKey()" style="width: 100%; padding: 10px; margin-top: 10px; font-size: 1rem; background-color: #0078D4; color: white; border: none; border-radius: 5px; cursor: pointer;">Submit SSH Key</button>
+                    <button class="submit-ssh-btn" onclick="submitKey()"
+                        style="width: 100%; padding: 10px; margin-top: 10px; font-size: 1rem; background-color: #0078D4; color: white; border: none; border-radius: 5px; cursor: pointer;">Submit
+                        SSH Key</button>
                 </div>
 
                 <!-- Password Option -->
                 <div class="option">
                     <h3 style="margin-bottom: 10px;color: #ff9800;">Option 2: Create Password</h3>
-                    <p style="margin-bottom: 15px;">Create a password to SSH onto <strong>terminal-develpment.uosec.org</strong>. Ensure your password is strong and matches the confirmation field.</p>
+                    <p style="margin-bottom: 15px;">Create a password to SSH onto
+                        <strong>terminal-development.uosec.org:2222</strong>. Ensure your password is strong and matches
+                        the confirmation field.</p>
+                    {% if password == "" %}
                     <div class="input-group">
-                        <input type="password" id="ssh-password" placeholder="Password" style="width: 100%; padding: 10px; font-size: 1rem; border-radius: 5px; border: 1px solid #444; margin-bottom: 10px;">
+                        <input type="password" id="ssh-password" placeholder="Password"
+                            style="width: 100%; padding: 10px; font-size: 1rem; border-radius: 5px; border: 1px solid #444; margin-bottom: 10px;">
                     </div>
                     <div class="input-group">
-                        <input type="password" id="confirm-password" placeholder="Confirm Password" style="width: 100%; padding: 10px; font-size: 1rem; border-radius: 5px; border: 1px solid #444;">
+                        <input type="password" id="confirm-password" placeholder="Confirm Password"
+                            style="width: 100%; padding: 10px; font-size: 1rem; border-radius: 5px; border: 1px solid #444;">
                     </div>
-                    <button class="enter-btn" onclick="checkPasswords()" style="width: 100%; padding: 10px; margin-top: 10px; font-size: 1rem; background-color: #0078D4; color: white; border: none; border-radius: 5px; cursor: pointer;">Create Password</button>
+                    {% else %}
+                    <div class="input-group">
+                        <input type="password" id="ssh-password" placeholder="{{ password }}"
+                            style="width: 100%; padding: 10px; font-size: 1rem; border-radius: 5px; border: 1px solid #444; margin-bottom: 10px;">
+                    </div>
+                    <div class="input-group">
+                        <input type="password" id="confirm-password" placeholder="{{ password }}"
+                            style="width: 100%; padding: 10px; font-size: 1rem; border-radius: 5px; border: 1px solid #444;">
+                    </div>
+                    {% endif %}
+                    <button class="enter-btn" onclick="checkPasswords()"
+                        style="width: 100%; padding: 10px; margin-top: 10px; font-size: 1rem; background-color: #0078D4; color: white; border: none; border-radius: 5px; cursor: pointer;">Create
+                        Password</button>
                 </div>
             </div>
 
             <!-- Web Terminal Option -->
             <div class="option option-large">
                 <h3 style="margin-bottom: 10px;color: #ff9800;">Option 3: Access Web Terminal</h3>
-                <p style="margin-bottom: 15px;">Use the web terminal directly from this page. Click the button below to start your session and explore the challenges.</p>
-                
-                <button 
-                    class="terminal-btn" 
-                    onclick="location.href='/terminal'" 
+                <p style="margin-bottom: 15px;">Use the web terminal directly from this page. Click the button below to
+                    start your session and explore the challenges.</p>
+
+                <button class="terminal-btn" onclick="location.href='/terminal'"
                     style="width: 50%; padding: 10px; font-size: 1rem; background-color: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer;">
                     Access Web Terminal
                 </button>
-                        </div>
+            </div>
         </div>
     </div>
     <!-- Matrix Animation Script -->
@@ -104,27 +129,73 @@
         };
         setInterval(draw, 60);
 
-        function submitKey() {
+        async function submitKey() {
             const sshKey = document.getElementById('ssh-key').value;
+
             if (sshKey) {
-                document.getElementById('ssh-key').classList.add('glow');
-                const button = document.querySelector('.submit-ssh-btn');
-                button.textContent = "✓ SSH Key Submitted";
-                button.disabled = true;
+                try {
+                    const response = await fetch("/", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ ssh_key: sshKey })
+                    });
+
+                    if (response.ok) {
+                        document.getElementById('ssh-key').classList.add('glow');
+                        const button = document.querySelector('.submit-ssh-btn');
+                        button.textContent = "✓ SSH Key Submitted";
+                        button.disabled = true;
+                    } else {
+                        const result = await response.json();
+                        alert("Error submitting SSH key: " + result.message);
+                    }
+                } catch (error) {
+                    console.error("Error:", error);
+                    alert("An error occurred while submitting the SSH key.");
+                }
+            } else {
+                alert("Please enter an SSH key.");
             }
         }
 
-        function checkPasswords() {
-            if (document.getElementById('ssh-password').value === "" || document.getElementById('confirm-password').value === "") {
-                alert("Password fields cannot be empty. Please fill in both fields.");
-            } else if (document.getElementById('ssh-password').value !== document.getElementById('confirm-password').value) {
-                alert("Passwords do not match. Please try again.");
+async function checkPasswords() {
+    const password = document.getElementById('ssh-password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+
+    if (password === "" || confirmPassword === "") {
+        alert("Password fields cannot be empty. Please fill in both fields.");
+    } else if (password !== confirmPassword) {
+        alert("Passwords do not match. Please try again.");
+        document.getElementById('ssh-password').value = "";
+        document.getElementById('confirm-password').value = "";
+    } else {
+        try {
+            const response = await fetch("/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ password: password })
+            });
+
+            if (response.ok) {
+                alert("Password updated successfully.");
                 document.getElementById('ssh-password').value = "";
                 document.getElementById('confirm-password').value = "";
+                document.getElementById('ssh-password').placeholder = "*******";
+                document.getElementById('confirm-password').placeholder = "*******";
             } else {
-                alert("Passwords match. Proceeding with login.");
+                const result = await response.json();
+                alert("Error updating password: " + result.message);
             }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("An error occurred while updating the password.");
         }
+    }
+}
 
         function accessTerminal() {
             alert("Accessing Web Terminal...");
@@ -137,4 +208,5 @@
 
     </script>
 </body>
+
 </html>

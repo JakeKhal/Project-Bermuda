@@ -20,6 +20,7 @@ and various routes for rendering templates and managing terminal sessions.
 - 2024-12-05: Removed REDIRECT_URI and added config for redirect_uri.
 - 2024-12-05: Added better error handling
 - 2024-12-05: Added FlaskRedis for caching
+- 2024-12-05: Added endpoints to get user ssh credentials
 """
 
 # Import necessary libraries and modules
@@ -79,7 +80,7 @@ if config["run_mode"] == "dev":
     redis_client = FlaskRedis.from_custom_provider(FakeRedis)
 else:
     app.config["SQLALCHEMY_DATABASE_URI"] = credentials["PROD_DATABASE_STRING"]
-    app.config['REDIS_URL'] = credentials["REDIS_STRING"]
+    app.config["REDIS_URL"] = credentials["REDIS_STRING"]
     redis_client = FlaskRedis()
 db.init_app(app)
 redis_client.init_app(app)
@@ -102,12 +103,13 @@ azure = oauth.register(
     authorize_url=f"{AUTHORITY}/oauth2/v2.0/authorize",
     access_token_url=f"{AUTHORITY}/oauth2/v2.0/token",
     client_kwargs={"scope": "openid profile email User.Read"},
-    redirect_uri=config['redirect_uri'],
+    redirect_uri=config["redirect_uri"],
 )
 
 # Create all database tables
 with app.app_context():
     db.create_all()
+
 
 # User loader for Flask-Login
 @login_manager.user_loader
@@ -121,6 +123,7 @@ def user_loader(email):
     """
     return User.query.filter_by(email=email).first()
 
+
 # Route for authentication
 @app.route("/authenticate")
 def login():
@@ -129,7 +132,8 @@ def login():
     Returns:
         Response: Redirect response to Azure AD.
     """
-    return azure.authorize_redirect(redirect_uri=config['redirect_uri'])
+    return azure.authorize_redirect(redirect_uri=config["redirect_uri"])
+
 
 # Callback route for Azure AD
 @app.route("/callback")
@@ -146,7 +150,7 @@ def callback():
 
     # Exchange the authorization code for tokens using MSAL
     result = app_msal.acquire_token_by_authorization_code(
-        code, scopes=SCOPES, redirect_uri=config['redirect_uri']
+        code, scopes=SCOPES, redirect_uri=config["redirect_uri"]
     )
 
     if "access_token" in result:
@@ -180,6 +184,7 @@ def callback():
 
     return f"Failed to acquire token: {result.get('error_description')}"
 
+
 # Index route
 @app.route("/", methods=["GET", "POST"])
 @flask_login.login_required
@@ -189,21 +194,49 @@ def index():
     Returns:
         Response: Rendered template for SSH entry.
     """
-    ssh_creds = SSH_Cred.query.filter_by(user_id=current_user.id) 
-    if user is None:
-        ssh_creds = User(user_id=current_user)
-        db.session.add(user)
+    ssh_creds = SSH_Cred.query.filter_by(user_id=current_user.id).first()
+    if ssh_creds is None:
+        ssh_creds = SSH_Cred(user_id=current_user.id)
+        db.session.add(ssh_creds)
         db.session.commit()
 
-    priv_key = ""
+    if request.method == "POST" and request.is_json:
+        data = request.get_json()
+        updated = False
+
+        if "password" in data:
+            password = data["password"]
+            if password:
+                ssh_creds.set_password(password)
+                updated = True
+
+        if "ssh_key" in data:
+            ssh_key = data["ssh_key"]
+            if ssh_key:
+                ssh_creds.ssh_key = ssh_key
+                updated = True
+
+        if updated:
+            db.session.commit()
+            return jsonify({"status": "success", "message": "Credentials updated"}), 200
+        else:
+            return (
+                jsonify({"status": "error", "message": "No valid data provided"}),
+                400,
+            )
+
+    pub_key = "ssh-rsa AAAAB3..."
     if ssh_creds.ssh_key:
-        priv_key = ssh_creds.ssh_key
+        pub_key = ssh_creds.ssh_key
 
     password = ""
     if ssh_creds.hashed_password:
-        priv_key = ssh_creds.ssh_key
+        password = "*******"
 
-    return render_template("ssh_entry.html", user=current_user)
+    return render_template(
+        "ssh_entry.html", user=current_user, pub_key=pub_key, password=password
+    )
+
 
 # Logout route
 @app.route("/logout")
@@ -217,6 +250,7 @@ def logout():
     flask_login.logout_user()
     return render_template("landing.html")
 
+
 # Error handler for 404
 @app.errorhandler(404)
 def page_not_found(e):
@@ -228,6 +262,7 @@ def page_not_found(e):
         Response: Rendered template for 404 error.
     """
     return render_template("404.html"), 404
+
 
 # Error handler for 403
 @app.errorhandler(403)
@@ -241,6 +276,7 @@ def forbidden(e):
     """
     return render_template("403.html"), 403
 
+
 # Route to get current user ID
 @app.route("/whoami")
 @flask_login.login_required
@@ -252,6 +288,7 @@ def whoami():
     """
     return str(current_user.get_id())
 
+
 # Landing page route
 @app.route("/landing")
 def landing():
@@ -261,6 +298,7 @@ def landing():
         Response: Rendered template for landing page.
     """
     return render_template("landing.html")
+
 
 # Home page route
 @app.route("/home")
@@ -272,6 +310,7 @@ def home():
         Response: Rendered template for home page.
     """
     return render_template("home.html")
+
 
 # Route to manage challenges
 @app.route("/challenges", methods=["GET", "POST"])
@@ -318,33 +357,46 @@ def manage_challenges():
 
         # Debugging: Print the received flag and the expected flag
         print(f"Received flag for challenge {challenge_id}: '{flag}'")
-        print(f"Expected flag for challenge {challenge_id}: '{challenges[challenge_id]['flag']}'")
+        print(
+            f"Expected flag for challenge {challenge_id}: '{challenges[challenge_id]['flag']}'"
+        )
 
         # Check if the flag is correct
         if challenges[challenge_id]["flag"].strip() == flag.strip():
             # Check if the user has already solved the challenge
-            existing_solve = Challenge_Solve.query.filter_by(user_id=current_user.id, challenge_id=challenge_id).first()
+            existing_solve = Challenge_Solve.query.filter_by(
+                user_id=current_user.id, challenge_id=challenge_id
+            ).first()
             if existing_solve:
-                print(f"Challenge {challenge_id} already solved by user {current_user.id}")
+                print(
+                    f"Challenge {challenge_id} already solved by user {current_user.id}"
+                )
                 return jsonify({"status": "err", "message": "Challenge already solved"})
 
             # Mark the challenge as solved
             new_solve = Challenge_Solve(
-                challenge_id=challenge_id,
-                user_id=current_user.id
+                challenge_id=challenge_id, user_id=current_user.id
             )
             db.session.add(new_solve)
             try:
                 db.session.commit()
                 print(f"Challenge {challenge_id} solved by user {current_user.id}")
-                return jsonify({"status": "ok", "message": "Challenge solved successfully!"})
+                return jsonify(
+                    {"status": "ok", "message": "Challenge solved successfully!"}
+                )
             except sqlalchemy.exc.IntegrityError as e:
                 db.session.rollback()
                 print(f"IntegrityError: {e}")
-                return jsonify({"status": "err", "message": "Database error: Challenge already solved"})
+                return jsonify(
+                    {
+                        "status": "err",
+                        "message": "Database error: Challenge already solved",
+                    }
+                )
         else:
             print(f"Incorrect flag for challenge {challenge_id}")
             return jsonify({"status": "err", "message": "Incorrect flag"})
+
 
 # Terminal route
 @app.route("/terminal")
@@ -356,6 +408,7 @@ def terminal():
         Response: Rendered template for terminal page.
     """
     return render_template("terminal.html")
+
 
 # Function to set terminal window size
 def set_winsize(fd, row, col, xpix=0, ypix=0):
@@ -372,6 +425,7 @@ def set_winsize(fd, row, col, xpix=0, ypix=0):
     winsize = struct.pack("HHHH", row, col, xpix, ypix)
     fcntl.ioctl(fd, termios.TIOCSWINSZ, winsize)
 
+
 # Function to read and forward PTY output
 def read_and_forward_pty_output(user_id):
     """
@@ -387,7 +441,7 @@ def read_and_forward_pty_output(user_id):
             fd = redis_client.hget(f"session:{user_id}", "fd")
             if not pid or not fd:
                 return
-            
+
             pid, fd = int(pid), int(fd)
             alive_child = check_pid(pid)
             open_fd = is_fd_open(fd)
@@ -412,6 +466,7 @@ def read_and_forward_pty_output(user_id):
             print("Error forwarding data, closing session")
             redis_client.delete(f"session:{user_id}")
 
+
 # SocketIO event handler for PTY input
 @socketio.on("pty-input", namespace="/pty")
 def pty_input(data):
@@ -423,10 +478,10 @@ def pty_input(data):
     if not current_user.is_authenticated:
         print("Rejected unauthenticated user")
         return
-    
+
     user_id = current_user.get_db_id()
     fd = redis_client.hget(f"session:{user_id}", "fd")
-    
+
     if fd:
         fd = int(fd)
         try:
@@ -435,6 +490,7 @@ def pty_input(data):
         except:
             print("Error forwarding data, closing session")
             redis_client.delete(f"session:{user_id}")
+
 
 # SocketIO event handler for terminal resize
 @socketio.on("resize", namespace="/pty")
@@ -455,6 +511,7 @@ def resize(data):
         fd = int(fd)
         logging.debug(f"Resizing window to {data['rows']}x{data['cols']}")
         set_winsize(fd, data["rows"], data["cols"])
+
 
 # SocketIO event handler for client connection
 @socketio.on("connect", namespace="/pty")
@@ -510,7 +567,6 @@ def connect(auth):
         # of this subprocess
         try:
 
-
             subprocess.run(
                 [
                     "/usr/bin/podman",
@@ -529,7 +585,11 @@ def connect(auth):
     else:
         redis_client.hmset(
             f"session:{user_id}",
-            {"pid": child_pid, "fd": child_fd, "container_name": current_user.container_name}
+            {
+                "pid": child_pid,
+                "fd": child_fd,
+                "container_name": current_user.container_name,
+            },
         )
         redis_client.hset(f"user:{user_id}", "email", current_user.email)
         set_winsize(child_fd, 50, 50)
@@ -556,6 +616,7 @@ def is_fd_open(fd):
     except OSError:
         return False
 
+
 # Main function to run the app
 def main():
     """
@@ -564,7 +625,9 @@ def main():
     if config["run_mode"] == "dev":
         socketio.run(app, debug=True, port=5000, host="0.0.0.0")
     else:
-        socketio.run(app, debug=False, port=5000, host="0.0.0.0", allow_unsafe_werkzeug=True)
+        socketio.run(
+            app, debug=False, port=5000, host="0.0.0.0", allow_unsafe_werkzeug=True
+        )
 
 
 if __name__ == "__main__":
