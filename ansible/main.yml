@@ -8,6 +8,10 @@
     - name: Configure MariaDB
       ansible.builtin.include_tasks:
         file: tasks/configure_mariadb.yml
+
+    - name: Configure Valkey
+      ansible.builtin.include_tasks:
+        file: tasks/configure_redis.yml
     
     - name: Build all containers
       ansible.builtin.include_tasks:
