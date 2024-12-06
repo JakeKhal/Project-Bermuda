@@ -181,7 +181,7 @@ def callback():
     return f"Failed to acquire token: {result.get('error_description')}"
 
 # Index route
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 @flask_login.login_required
 def index():
     """
@@ -189,6 +189,20 @@ def index():
     Returns:
         Response: Rendered template for SSH entry.
     """
+    ssh_creds = SSH_Cred.query.filter_by(user_id=current_user.id) 
+    if user is None:
+        ssh_creds = User(user_id=current_user)
+        db.session.add(user)
+        db.session.commit()
+
+    priv_key = ""
+    if ssh_creds.ssh_key:
+        priv_key = ssh_creds.ssh_key
+
+    password = ""
+    if ssh_creds.hashed_password:
+        priv_key = ssh_creds.ssh_key
+
     return render_template("ssh_entry.html", user=current_user)
 
 # Logout route
