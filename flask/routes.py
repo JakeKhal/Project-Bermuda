@@ -549,7 +549,7 @@ def main():
     if config["run_mode"] == "dev":
         socketio.run(app, debug=True, port=5000, host="0.0.0.0")
     else:
-        socketio.run(app, debug=False, port=5000, host="0.0.0.0")
+        socketio.run(app, debug=False, port=5000, host="0.0.0.0", allow_unsafe_werkzeug=True)
 
 
 if __name__ == "__main__":
