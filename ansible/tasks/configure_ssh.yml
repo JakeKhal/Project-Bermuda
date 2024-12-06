@@ -1,0 +1,41 @@
+- name: Open SSH Port in firewall
+  ansible.builtin.firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+  loop:
+    - "2222/tcp"
+
+- name: Install needed packages
+  package:
+    name: ["go", "gcc"]
+    state: present
+
+- name: Build ssh server
+  ansible.builtin.command:
+    cmd: go build -o bermuda-ssh main.go
+    chdir: /home/podman/Project-Bermuda/ssh  # Change this to the folder where main.go is located
+    creates: /home/podman/Project-Bermuda/ssh/bermuda-ssh  # This prevents re-building if the file already exists
+  become: true  # Use sudo to run as a different user
+  become_user: podman  # Replace with the username you want to run the command as
+
+- name: Copy the Bermuda ssh service file
+  copy:
+    src: files/bermuda-ssh.service
+    dest: /etc/systemd/system/bermuda-ssh.service
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Reload systemd daemon
+  command: systemctl daemon-reload
+
+- name: Enable the Bermuda service
+  systemd:
+    name: bermuda-ssh.service
+    enabled: yes
+
+- name: Start the Bermuda service
+  systemd:
+    name: bermuda-ssh.service
+    state: restarted

@@ -24,3 +24,5 @@
     - name: Configure Caddy
       ansible.builtin.include_tasks:
         file: tasks/configure_caddy.yml
+
+    - name: Configure ssh server
