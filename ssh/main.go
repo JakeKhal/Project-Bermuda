@@ -76,6 +76,7 @@ func handleSession(s ssh.Session) {
 	ptyReq, winCh, isPty := s.Pty()
 	if isPty {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("TERM=%s", ptyReq.Term))
+		cmd.Env = append(cmd.Env, "PATH="+os.Getenv("PATH")+":/usr/bin")
 		f, err := pty.Start(cmd)
 		if err != nil {
 			panic(err)
