@@ -51,13 +51,13 @@ login_manager.login_view = "/landing"
 # Set database URI based on run mode
 if config["run_mode"] == "dev":
     app.config["SQLALCHEMY_DATABASE_URI"] = credentials["DEV_DATABASE_STRING"]
-    redis_store = FlaskRedis.from_custom_provider(FakeRedis)
+    redis_client = FlaskRedis.from_custom_provider(FakeRedis)
 else:
     app.config["SQLALCHEMY_DATABASE_URI"] = credentials["PROD_DATABASE_STRING"]
     app.config['REDIS_URL'] = credentials["REDIS_STRING"]
-    redis_store = FlaskRedis()
+    redis_client = FlaskRedis()
 db.init_app(app)
-redis_store.init_app(app)
+redis_client.init_app(app)
 
 # MSAL ConfidentialClientApplication
 app_msal = msal.ConfidentialClientApplication(
@@ -262,7 +262,6 @@ def read_and_forward_pty_output(user_id):
             user_email = redis_client.hget(f"user:{user_id}", "email")
             pid = redis_client.hget(f"session:{user_id}", "pid")
             fd = redis_client.hget(f"session:{user_id}", "fd")
-
             if not pid or not fd:
                 return
             
@@ -279,11 +278,12 @@ def read_and_forward_pty_output(user_id):
             (data_ready, _, _) = select.select([fd], [], [], timeout_sec)
             if data_ready:
                 output = os.read(fd, max_read_bytes).decode(errors="ignore")
+                print(f"forwarding data {output}, from fd {fd} to room {user_email}")
                 socketio.emit(
                     "pty-output",
                     {"output": output},
                     namespace="/pty",
-                    room=user_email,
+                    room=user_email.decode("utf-8"),
                 )
         except:
             logging.info("Error forwarding data, closing session")
@@ -301,7 +301,7 @@ def pty_input(data):
     
     if fd:
         fd = int(fd)
-        logging.debug("Received input from browser: %s" % data["input"])
+        print("Received input from browser: %s" % data["input"])
         os.write(fd, data["input"].encode())
 
 # SocketIO event handler for terminal resize
@@ -375,7 +375,7 @@ def connect(auth):
     else:
         redis_client.hmset(
             f"session:{user_id}",
-            {"pid": child_pid, "fd": child_fd}
+            {"pid": child_pid, "fd": child_fd, "container_name": current_user.container_name}
         )
         redis_client.hset(f"user:{user_id}", "email", current_user.email)
         set_winsize(child_fd, 50, 50)
