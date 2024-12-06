@@ -359,18 +359,24 @@ def connect(auth):
     # Start new terminal session
     (child_pid, child_fd) = pty.fork()
     if child_pid == 0:
-        subprocess.run(
-            [
-                "/usr/bin/podman",
-                "run",
-                "--rm",
-                "-it",
-                "--replace",
-                "--name",
-                current_user.container_name,
-                config["image_name"],
-            ]
-        )
+        # this is the child process fork.
+        # anything printed here will show up in the pty, including the output
+        # of this subprocess
+        try:
+            subprocess.run(
+                [
+                    "/usr/bin/podman",
+                    "run",
+                    "--rm",
+                    "-it",
+                    "--replace",
+                    "--name",
+                    current_user.container_name,
+                    config["image_name"],
+                ]
+            )
+        except:
+            pass
         return
     else:
         redis_client.hmset(
