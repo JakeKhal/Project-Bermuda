@@ -12,6 +12,7 @@ Modifications:
 - 2024-11-12: Added get_db_id, is_active, get_id, is_authenticated, and is_anonymous methods to User model
 - 2024-11-27: Connected challanges page to database
 - 2024-11-30: Fixed submit correction flag not functioning correctly with database
+- 2024-12-5: Added ssh credential model
 """
 
 # Import necessary libraries and modules
@@ -20,6 +21,7 @@ from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase, relationship
 from sqlalchemy.sql import func
+from bcrypt import gensalt, hashpw, checkpw
 
 # Define the base class for declarative models
 class Base(DeclarativeBase):
@@ -130,3 +132,22 @@ class Terminal_Session(db.Model):
 
     # Establish a relationship to the User model
     user: Mapped[User] = relationship("User", backref="terminal_sessions")
+
+class SSH_Cred(db.Model):
+    __tablename__ = "ssh_creds"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=True)
+    ssh_key: Mapped[str] = mapped_column(String(5000), nullable=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
+
+    # Establish a relationship to the User model
+    user: Mapped[User] = relationship("User", backref="ssh_cred")
+
+    def set_password(self, password: str):
+        """Hash and store the password using bcrypt."""
+        salt = gensalt()
+        self.hashed_password = hashpw(password.encode("utf-8"), salt).decode("utf-8")
+
+    def check_password(self, password: str) -> bool:
+        """Verify the provided password matches the hashed password."""
+        return checkpw(password.encode("utf-8"), self.hashed_password.encode("utf-8"))

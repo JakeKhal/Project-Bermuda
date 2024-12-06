@@ -1,5 +1,6 @@
 {
   "image_name": "localhost/kali-image:latest",
   "run_mode": "dev",
-  "redirect_uri": "http://localhost:5000/callback"
+  "redirect_uri": "http://localhost:5000/callback",
+  "ssh_listen_addr": "0.0.0.0:2222"
 }

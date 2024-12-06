@@ -6,3 +6,5 @@ flask/logfile.log
 flask/instance/*
 flask/instance/project.db
 **/credentials.json
+ssh/main
+ssh/bermuda-ssh
