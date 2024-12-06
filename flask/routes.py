@@ -366,18 +366,21 @@ def connect(auth):
         # this is the child process fork.
         # anything printed here will show up in the pty, including the output
         # of this subprocess
-        subprocess.run(
-            [
-                "/usr/bin/podman",
-                "run",
-                "--rm",
-                "-it",
-                "--replace",
-                "--name",
-                current_user.container_name,
-                config["image_name"],
-            ]
-        )
+        try:
+            subprocess.run(
+                [
+                    "/usr/bin/podman",
+                    "run",
+                    "--rm",
+                    "-it",
+                    "--replace",
+                    "--name",
+                    current_user.container_name,
+                    config["image_name"],
+                ]
+            )
+        except:
+            pass
         return
     else:
         # this is the parent process fork.

@@ -212,11 +212,6 @@ ch.js"></script>
       term.resize(15, 50);
       console.log(`size: ${term.cols} columns, ${term.rows} rows`);
       fit.fit();
-      term.writeln("Welcome to Bermuda!");
-      term.writeln('')
-      term.writeln("You can copy with Ctrl + Shift + X");
-      term.writeln("You can paste with Ctrl + Shift + V");
-      term.writeln('')
       term.onData((data) => {
         console.log("browser terminal received new data:", data);
         socket.emit("pty-input", { input: data });
