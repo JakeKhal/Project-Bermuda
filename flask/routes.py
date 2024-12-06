@@ -393,7 +393,7 @@ def read_and_forward_pty_output(user_id):
                     room=user_email.decode("utf-8"),
                 )
         except:
-            logging.info("Error forwarding data, closing session")
+            print("Error forwarding data, closing session")
             redis_client.delete(f"session:{user_id}")
 
 # SocketIO event handler for PTY input
@@ -413,8 +413,12 @@ def pty_input(data):
     
     if fd:
         fd = int(fd)
-        print("Received input from browser: %s" % data["input"])
-        os.write(fd, data["input"].encode())
+        try:
+            print("Received input from browser: %s" % data["input"])
+            os.write(fd, data["input"].encode())
+        except:
+            print("Error forwarding data, closing session")
+            redis_client.delete(f"session:{user_id}")
 
 # SocketIO event handler for terminal resize
 @socketio.on("resize", namespace="/pty")
@@ -455,29 +459,6 @@ def connect(auth):
     pid = redis_client.hget(f"session:{user_id}", "pid")
     fd = redis_client.hget(f"session:{user_id}", "fd")
 
-    if pid and fd:
-        pid, fd = int(pid), int(fd)
-        alive_child = check_pid(pid)
-        open_fd = is_fd_open(fd)
-
-        if alive_child:
-            os.kill(pid, 15)
-
-        if open_fd:
-            os.close(fd)
-
-        subprocess.run(
-            [
-                "/usr/bin/podman",
-                "rm",
-                "--time",
-                "1",
-                "--force",
-                current_user.container_name,
-            ]
-        )
-        redis_client.delete(f"session:{user_id}")
-
     # Start new terminal session
     (child_pid, child_fd) = pty.fork()
     if child_pid == 0:
@@ -485,6 +466,36 @@ def connect(auth):
         # anything printed here will show up in the pty, including the output
         # of this subprocess
         try:
+
+            if pid and fd:
+                pid, fd = int(pid), int(fd)
+                alive_child = check_pid(pid)
+                open_fd = is_fd_open(fd)
+
+                if alive_child:
+                    os.kill(pid, 15)
+
+                if open_fd:
+                    os.close(fd)
+
+                # Suppress output of subprocess.run
+                print("Cleaning up old session... Please wait")
+                subprocess.run(
+                    [
+                        "/usr/bin/podman",
+                        "rm",
+                        "--time",
+                        "1",
+                        "--force",
+                        current_user.container_name,
+                    ],
+                    stdout=subprocess.DEVNULL,  # Redirect standard output to /dev/null
+                    stderr=subprocess.DEVNULL,  # Redirect standard error to /dev/null
+                )
+
+                redis_client.delete(f"session:{user_id}")
+
+
             subprocess.run(
                 [
                     "/usr/bin/podman",
