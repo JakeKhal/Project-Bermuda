@@ -1,4 +1,28 @@
 #!/usr/bin/env python3
+"""
+File: routes.py
+Purpose: This file defines the routes and main functionality for Project Bermuda, which is a Flask web application.
+Creation Date: 2024-11-12
+Authors: Stephen Swanson, Alexandr Iapara, Emily Clauson, Jake Khal
+
+This file contains the main routes and functionality for the Project Bermuda web application. It includes routes for
+authentication, managing challenges, the terminal, and other pages. It also includes SocketIO event handlers for
+interacting with the terminal.
+
+Modifications:
+- 2024-11-12: Initial version.
+- 2024-11-25: Working implementation with user authentication via Azure AD, real-time terminal sessions using Flask-SocketIO, 
+and various routes for rendering templates and managing terminal sessions.
+- 2024-11-26: Configured routes for html files and added error handlers for 404 and 403.
+- 2024-11-27: Added manage_challenges route to handle challenge validation and solving.
+- 2024-11-30: Fixed submit correct flag not functioning properly.
+- 2024-12-03: Added extra configs for database and run mode.
+- 2024-12-05: Removed REDIRECT_URI and added config for redirect_uri.
+- 2024-12-05: Added better error handling
+- 2024-12-05: Added FlaskRedis for caching
+"""
+
+# Import necessary libraries and modules
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, join_room
 import flask
@@ -16,7 +40,6 @@ import socket
 import json
 import flask_login
 from flask_login import current_user
-from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 import msal
 import requests
@@ -27,8 +50,10 @@ from config import *
 from utils import *
 import sqlalchemy
 
+# Set logging level for werkzeug
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
+# Define the version of the application
 __version__ = "0.5.0.2"
 
 # Initialize Flask app
@@ -79,17 +104,33 @@ with app.app_context():
 # User loader for Flask-Login
 @login_manager.user_loader
 def user_loader(email):
+    """
+    Load user by email.
+    Args:
+        email (str): User's email address.
+    Returns:
+        User: User object if found, else None.
+    """
     return User.query.filter_by(email=email).first()
 
 # Route for authentication
 @app.route("/authenticate")
 def login():
-    # Redirect to Azure AD authorization endpoint
+    """
+    Redirect to Azure AD authorization endpoint.
+    Returns:
+        Response: Redirect response to Azure AD.
+    """
     return azure.authorize_redirect(redirect_uri=config['redirect_uri'])
 
 # Callback route for Azure AD
 @app.route("/callback")
 def callback():
+    """
+    Handle the callback from Azure AD after authentication.
+    Returns:
+        Response: Redirect to index or error message.
+    """
     # Get the authorization code from the query parameters
     code = request.args.get("code")
     if not code:
@@ -135,46 +176,93 @@ def callback():
 @app.route("/")
 @flask_login.login_required
 def index():
+    """
+    Render the SSH entry page.
+    Returns:
+        Response: Rendered template for SSH entry.
+    """
     return render_template("ssh_entry.html", user=current_user)
 
 # Logout route
 @app.route("/logout")
 @flask_login.login_required
 def logout():
+    """
+    Log out the current user.
+    Returns:
+        Response: Rendered template for landing page.
+    """
     flask_login.logout_user()
     return render_template("landing.html")
 
 # Error handler for 404
 @app.errorhandler(404)
 def page_not_found(e):
+    """
+    Handle 404 errors.
+    Args:
+        e (Exception): Exception object.
+    Returns:
+        Response: Rendered template for 404 error.
+    """
     return render_template("404.html"), 404
 
 # Error handler for 403
 @app.errorhandler(403)
 def forbidden(e):
+    """
+    Handle 403 errors.
+    Args:
+        e (Exception): Exception object.
+    Returns:
+        Response: Rendered template for 403 error.
+    """
     return render_template("403.html"), 403
 
 # Route to get current user ID
 @app.route("/whoami")
 @flask_login.login_required
 def whoami():
+    """
+    Get the current user's ID.
+    Returns:
+        str: Current user's ID.
+    """
     return str(current_user.get_id())
 
 # Landing page route
 @app.route("/landing")
 def landing():
+    """
+    Render the landing page.
+    Returns:
+        Response: Rendered template for landing page.
+    """
     return render_template("landing.html")
 
 # Home page route
 @app.route("/home")
 @flask_login.login_required
 def home():
+    """
+    Render the home page.
+    Returns:
+        Response: Rendered template for home page.
+    """
     return render_template("home.html")
 
 # Route to manage challenges
 @app.route("/challenges", methods=["GET", "POST"])
 @flask_login.login_required
 def manage_challenges():
+    """
+    Manage challenges for the user.
+    Methods:
+        GET: Return the list of challenges.
+        POST: Validate and solve a challenge.
+    Returns:
+        Response: JSON response with challenge data or status message.
+    """
     if request.method == "GET":
         solved_challenges = []
         for solve in Challenge_Solve.query.filter_by(user_id=current_user.id).all():
@@ -240,16 +328,35 @@ def manage_challenges():
 @app.route("/terminal")
 @flask_login.login_required
 def terminal():
+    """
+    Render the terminal page.
+    Returns:
+        Response: Rendered template for terminal page.
+    """
     return render_template("terminal.html")
 
 # Function to set terminal window size
 def set_winsize(fd, row, col, xpix=0, ypix=0):
+    """
+    Set the terminal window size.
+    Args:
+        fd (int): File descriptor.
+        row (int): Number of rows.
+        col (int): Number of columns.
+        xpix (int): Pixel width (default 0).
+        ypix (int): Pixel height (default 0).
+    """
     logging.debug("setting window size with termios")
     winsize = struct.pack("HHHH", row, col, xpix, ypix)
     fcntl.ioctl(fd, termios.TIOCSWINSZ, winsize)
 
 # Function to read and forward PTY output
 def read_and_forward_pty_output(user_id):
+    """
+    Read and forward PTY output to the client.
+    Args:
+        user_id (int): User ID.
+    """
     with app.app_context():
         max_read_bytes = 1024 * 20
         while True:
@@ -293,8 +400,10 @@ def read_and_forward_pty_output(user_id):
 # SocketIO event handler for PTY input
 @socketio.on("pty-input", namespace="/pty")
 def pty_input(data):
-    """write to the child pty. The pty sees this as if you are typing in a real
-    terminal.
+    """
+    Handle PTY input from the client.
+    Args:
+        data (dict): Data containing the input.
     """
     if not current_user.is_authenticated:
         print("rejected unauthenticated user")
@@ -310,6 +419,11 @@ def pty_input(data):
 # SocketIO event handler for terminal resize
 @socketio.on("resize", namespace="/pty")
 def resize(data):
+    """
+    Handle terminal resize event.
+    Args:
+        data (dict): Data containing the new size.
+    """
     if not current_user.is_authenticated:
         print("rejected unauthenticated user")
         return
@@ -326,7 +440,11 @@ def resize(data):
 # SocketIO event handler for client connection
 @socketio.on("connect", namespace="/pty")
 def connect(auth):
-    """new client connected"""
+    """
+    Handle new client connection.
+    Args:
+        auth (dict): Authentication data.
+    """
     if not current_user.is_authenticated:
         print("rejected unauthenticated user")
         return
@@ -401,6 +519,9 @@ def connect(auth):
 
 # Main function to run the app
 def main():
+    """
+    Run the Flask application.
+    """
     if config["run_mode"] == "dev":
         socketio.run(app, debug=True, port=5000, host="0.0.0.0")
     else:
