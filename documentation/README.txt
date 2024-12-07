@@ -1,5 +1,7 @@
 Access Link: terminal-development.uosec.org
 
+Video Link: https://youtu.be/sv3lvB-_bHM
+
 # Project Bermuda
 
 Educational platform for University of Oregon students to practice cybersecurity skills.
